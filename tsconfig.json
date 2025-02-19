@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo",
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "CommonJS",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "isolatedModules": true,
+    "moduleDetection": "force",
+
+    "outDir": "dist",
+    "rootDir": "src",
+    "esModuleInterop": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "removeComments": true,
+    "sourceMap": false,
+    "strict": true,
+
+    "typeRoots": ["./src/types", "node_modules/@types"]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"],
+}

@@ -1,0 +1,1176 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model activity_log {
+  id           BigInt    @id @default(autoincrement())
+  log_name     String?   @db.VarChar(255)
+  description  String
+  subject_type String?   @db.VarChar(255)
+  subject_id   BigInt?
+  causer_type  String?   @db.VarChar(255)
+  causer_id    BigInt?
+  properties   Json?     @db.Json
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  event        String?   @db.VarChar(255)
+  batch_uuid   String?   @db.Uuid
+
+  @@index([log_name], map: "activity_log_log_name_index")
+  @@index([causer_type, causer_id], map: "causer")
+  @@index([subject_type, subject_id], map: "subject")
+}
+
+model admin_accessible_models {
+  id              BigInt    @id @default(autoincrement())
+  admin_id        BigInt
+  accessible_type String    @db.VarChar(255)
+  accessible_id   BigInt
+  created_at      DateTime? @db.Timestamp(0)
+  updated_at      DateTime? @db.Timestamp(0)
+  admins          admins    @relation(fields: [admin_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "admin_accessible_models_admin_id_foreign")
+}
+
+model admins {
+  id                      BigInt                    @id @default(autoincrement())
+  name                    String                    @db.VarChar(255)
+  email                   String                    @db.VarChar(255)
+  phone                   String?                   @db.VarChar(255)
+  password                String                    @db.VarChar(255)
+  remember_token          String?                   @db.VarChar(100)
+  deleted_at              DateTime?                 @db.Timestamp(0)
+  created_at              DateTime?                 @db.Timestamp(0)
+  updated_at              DateTime?                 @db.Timestamp(0)
+  admin_accessible_models admin_accessible_models[]
+
+  @@unique([email, phone, deleted_at], map: "admins_email_phone_deleted_at_unique")
+}
+
+model assigned_coupons {
+  id              BigInt         @id @default(autoincrement())
+  coupon_id       BigInt
+  user_id         BigInt
+  used_at         DateTime?      @db.Timestamp(0)
+  assignable_type String?        @db.VarChar(255)
+  assignable_id   BigInt?
+  is_for_all      Boolean        @default(false)
+  created_at      DateTime?      @db.Timestamp(0)
+  updated_at      DateTime?      @db.Timestamp(0)
+  coupons         coupons        @relation(fields: [coupon_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "assigned_coupons_coupon_id_foreign")
+  users           users          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "assigned_coupons_user_id_foreign")
+  used_coupons    used_coupons[]
+
+  @@index([assignable_type, assignable_id], map: "assigned_coupons_assignable_type_assignable_id_index")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model brands {
+  id         BigInt    @id @default(autoincrement())
+  name       String    @db.VarChar(255)
+  status     String    @default("active") @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+model cache {
+  key        String @id @db.VarChar(255)
+  value      String
+  expiration Int
+}
+
+model cache_locks {
+  key        String @id @db.VarChar(255)
+  owner      String @db.VarChar(255)
+  expiration Int
+}
+
+model carts {
+  id               BigInt             @id @default(autoincrement())
+  user_id          BigInt
+  store_id         BigInt
+  created_at       DateTime?          @db.Timestamp(0)
+  updated_at       DateTime?          @db.Timestamp(0)
+  stores           stores             @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "carts_store_id_foreign")
+  users            users              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "carts_user_id_foreign")
+  store_cart_items store_cart_items[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model categories {
+  id                                                          BigInt                       @id @default(autoincrement())
+  status                                                      String                       @default("active") @db.VarChar(255)
+  is_parent                                                   Boolean                      @default(false)
+  module_id                                                   BigInt
+  created_at                                                  DateTime?                    @db.Timestamp(0)
+  updated_at                                                  DateTime?                    @db.Timestamp(0)
+  deleted_at                                                  DateTime?                    @db.Timestamp(0)
+  modules                                                     modules                      @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "categories_module_id_foreign")
+  category_relations_category_relations_child_idTocategories  category_relations[]         @relation("category_relations_child_idTocategories")
+  category_relations_category_relations_parent_idTocategories category_relations[]         @relation("category_relations_parent_idTocategories")
+  category_translations                                       category_translations[]
+  store_products_categories                                   store_products_categories[]
+  user_interested_categories                                  user_interested_categories[]
+}
+
+model category_relations {
+  id                                                  BigInt      @id @default(autoincrement())
+  parent_id                                           BigInt?
+  child_id                                            BigInt
+  order                                               Int         @default(0)
+  is_copy                                             Boolean     @default(false)
+  created_at                                          DateTime?   @db.Timestamp(0)
+  updated_at                                          DateTime?   @db.Timestamp(0)
+  categories_category_relations_child_idTocategories  categories  @relation("category_relations_child_idTocategories", fields: [child_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "category_relations_child_id_foreign")
+  categories_category_relations_parent_idTocategories categories? @relation("category_relations_parent_idTocategories", fields: [parent_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "category_relations_parent_id_foreign")
+}
+
+model category_translations {
+  id          BigInt     @id @default(autoincrement())
+  category_id BigInt
+  locale      String     @db.VarChar(255)
+  name        String     @db.VarChar(255)
+  created_at  DateTime?  @db.Timestamp(0)
+  updated_at  DateTime?  @db.Timestamp(0)
+  categories  categories @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "category_translations_category_id_foreign")
+
+  @@index([locale], map: "category_translations_locale_index")
+}
+
+model cities {
+  id         BigInt    @id @default(autoincrement())
+  name       String    @db.VarChar(255)
+  country_id BigInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  countries  countries @relation(fields: [country_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cities_country_id_foreign")
+  stores     stores[]
+  users      users[]
+}
+
+model countries {
+  id         BigInt    @id @default(autoincrement())
+  name       String    @db.VarChar(255)
+  code       String    @db.VarChar(255)
+  phone_code String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  cities     cities[]
+  stores     stores[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model coupons {
+  id                     BigInt             @id @default(autoincrement())
+  limit                  Int
+  code                   String             @db.VarChar(255)
+  discount_type          String             @db.VarChar(255)
+  discount_value         Decimal            @db.Decimal(8, 2)
+  start_date             DateTime           @db.Date
+  start_time             DateTime           @db.Time(0)
+  end_date               DateTime           @db.Date
+  end_time               DateTime           @db.Time(0)
+  status                 String             @default("active") @db.VarChar(255)
+  active_for_first_order Boolean            @default(false)
+  created_at             DateTime?          @db.Timestamp(0)
+  updated_at             DateTime?          @db.Timestamp(0)
+  deleted_at             DateTime?          @db.Timestamp(0)
+  assigned_coupons       assigned_coupons[]
+  orders                 orders[]
+}
+
+model courier_ratings {
+  id         BigInt    @id @default(autoincrement())
+  courier_id BigInt
+  order_id   BigInt
+  star_count Decimal   @db.Decimal(8, 2)
+  comment    String?   @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  couriers   couriers  @relation(fields: [courier_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "courier_ratings_courier_id_foreign")
+  orders     orders    @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "courier_ratings_order_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model courier_vehicles {
+  id             BigInt    @id @default(autoincrement())
+  name           String    @db.VarChar(255)
+  width          Int
+  vehicle_length Int
+  height         Int
+  max_weight     Int
+  status         String    @default("active") @db.VarChar(255)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+  deleted_at     DateTime? @db.Timestamp(0)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model couriers {
+  id                     BigInt                   @id @default(autoincrement())
+  name                   String                   @db.VarChar(255)
+  phone                  String?                  @db.VarChar(255)
+  store_id               BigInt?
+  email                  String                   @db.VarChar(255)
+  password               String                   @db.VarChar(255)
+  total_earn             Decimal                  @default(0) @db.Decimal(8, 2)
+  not_paid               Decimal                  @default(0) @db.Decimal(8, 2)
+  paid                   Decimal                  @default(0) @db.Decimal(8, 2)
+  order_count            Int                      @default(0)
+  rating                 Decimal                  @default(0) @db.Decimal(8, 2)
+  system_rating          Decimal                  @default(0) @db.Decimal(8, 2)
+  device_id              String?                  @db.VarChar(255)
+  lat                    String?                  @db.VarChar(255)
+  lng                    String?                  @db.VarChar(255)
+  status                 String                   @default("active") @db.VarChar(255)
+  created_at             DateTime?                @db.Timestamp(0)
+  updated_at             DateTime?                @db.Timestamp(0)
+  deleted_at             DateTime?                @db.Timestamp(0)
+  courier_ratings        courier_ratings[]
+  stores                 stores?                  @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "couriers_store_id_foreign")
+  orders                 orders[]
+  system_courier_ratings system_courier_ratings[]
+
+  @@unique([email, deleted_at], map: "couriers_email_deleted_at_unique")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model currencies {
+  id           BigInt         @id @default(autoincrement())
+  name         String         @db.VarChar(255)
+  code         String         @db.VarChar(255)
+  symbol       String         @db.VarChar(255)
+  status       String         @default("active") @db.VarChar(255)
+  created_at   DateTime?      @db.Timestamp(0)
+  updated_at   DateTime?      @db.Timestamp(0)
+  deleted_at   DateTime?      @db.Timestamp(0)
+  stores       stores[]
+  tips         tips[]
+  zone_pricing zone_pricing[]
+}
+
+model failed_jobs {
+  id         BigInt   @id @default(autoincrement())
+  uuid       String   @unique(map: "failed_jobs_uuid_unique") @db.VarChar(255)
+  connection String
+  queue      String
+  payload    String
+  exception  String
+  failed_at  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model job_batches {
+  id             String  @id @db.VarChar(255)
+  name           String  @db.VarChar(255)
+  total_jobs     Int
+  pending_jobs   Int
+  failed_jobs    Int
+  failed_job_ids String
+  options        String?
+  cancelled_at   Int?
+  created_at     Int
+  finished_at    Int?
+}
+
+model jobs {
+  id           BigInt @id @default(autoincrement())
+  queue        String @db.VarChar(255)
+  payload      String
+  attempts     Int    @db.SmallInt
+  reserved_at  Int?
+  available_at Int
+  created_at   Int
+
+  @@index([queue], map: "jobs_queue_index")
+}
+
+model languages {
+  id         BigInt    @id @default(autoincrement())
+  name       String    @db.VarChar(255)
+  code       String    @db.VarChar(255)
+  locale     String    @db.VarChar(255)
+  flag       String    @db.VarChar(255)
+  is_default Boolean   @default(false)
+  status     Boolean   @default(true)
+  sort_order Int       @default(0)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+}
+
+model migrations {
+  id        Int    @id @default(autoincrement())
+  migration String @db.VarChar(255)
+  batch     Int
+}
+
+model model_has_permissions {
+  permission_id BigInt
+  model_type    String      @db.VarChar(255)
+  model_id      BigInt
+  permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "model_has_permissions_permission_id_foreign")
+
+  @@id([permission_id, model_id, model_type])
+  @@index([model_id, model_type], map: "model_has_permissions_model_id_model_type_index")
+}
+
+model model_has_roles {
+  role_id    BigInt
+  model_type String @db.VarChar(255)
+  model_id   BigInt
+  roles      roles  @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "model_has_roles_role_id_foreign")
+
+  @@id([role_id, model_id, model_type])
+  @@index([model_id, model_type], map: "model_has_roles_model_id_model_type_index")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model modules {
+  id                    BigInt                  @id @default(autoincrement())
+  name                  String                  @db.VarChar(255)
+  status                String                  @default("active") @db.VarChar(255)
+  created_at            DateTime?               @db.Timestamp(0)
+  updated_at            DateTime?               @db.Timestamp(0)
+  deleted_at            DateTime?               @db.Timestamp(0)
+  categories            categories[]
+  modules_zones         modules_zones[]
+  order_based_campaigns order_based_campaigns[]
+  orders                orders[]
+  store_categories      store_categories[]
+  stores                stores[]
+}
+
+model modules_zones {
+  id         BigInt    @id @default(autoincrement())
+  module_id  BigInt
+  zone_id    BigInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  modules    modules   @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "modules_zones_module_id_foreign")
+  zones      zones     @relation(fields: [zone_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "modules_zones_zone_id_foreign")
+}
+
+model order_based_campaign_stores {
+  id                      BigInt                @id @default(autoincrement())
+  store_id                BigInt
+  order_based_campaign_id BigInt
+  created_at              DateTime?             @db.Timestamp(0)
+  updated_at              DateTime?             @db.Timestamp(0)
+  order_based_campaigns   order_based_campaigns @relation(fields: [order_based_campaign_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "order_based_campaign_stores_order_based_campaign_id_foreign")
+  stores                  stores                @relation(fields: [store_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "order_based_campaign_stores_store_id_foreign")
+}
+
+model order_based_campaign_translations {
+  id                      BigInt                @id @default(autoincrement())
+  order_based_campaign_id BigInt
+  locale                  String                @db.VarChar(255)
+  name                    String                @db.VarChar(255)
+  description             String?               @db.VarChar(255)
+  created_at              DateTime?             @db.Timestamp(0)
+  updated_at              DateTime?             @db.Timestamp(0)
+  order_based_campaigns   order_based_campaigns @relation(fields: [order_based_campaign_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "order_based_campaign_translations_order_based_campaign_id_forei")
+
+  @@index([locale], map: "order_based_campaign_translations_locale_index")
+}
+
+model order_based_campaign_zones {
+  id                      BigInt                @id @default(autoincrement())
+  zone_id                 BigInt
+  order_based_campaign_id BigInt
+  created_at              DateTime?             @db.Timestamp(0)
+  updated_at              DateTime?             @db.Timestamp(0)
+  order_based_campaigns   order_based_campaigns @relation(fields: [order_based_campaign_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "order_based_campaign_zones_order_based_campaign_id_foreign")
+  zones                   zones                 @relation(fields: [zone_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "order_based_campaign_zones_zone_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model order_based_campaigns {
+  id                                BigInt                              @id @default(autoincrement())
+  module_id                         BigInt
+  order_count                       Int
+  start_price                       Decimal?                            @db.Decimal(8, 2)
+  discount_type                     String                              @db.VarChar(255)
+  discount                          Decimal                             @db.Decimal(8, 2)
+  start_date                        DateTime                            @db.Date
+  end_date                          DateTime                            @db.Date
+  start_time                        DateTime                            @db.Time(0)
+  end_time                          DateTime                            @db.Time(0)
+  is_active                         Boolean                             @default(false)
+  can_repeat                        Boolean                             @default(true)
+  deleted_at                        DateTime?                           @db.Timestamp(0)
+  created_at                        DateTime?                           @db.Timestamp(0)
+  updated_at                        DateTime?                           @db.Timestamp(0)
+  order_based_campaign_stores       order_based_campaign_stores[]
+  order_based_campaign_translations order_based_campaign_translations[]
+  order_based_campaign_zones        order_based_campaign_zones[]
+  modules                           modules                             @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "order_based_campaigns_module_id_foreign")
+}
+
+model order_items {
+  id                                  BigInt                            @id @default(autoincrement())
+  order_id                            BigInt
+  store_product_variant_assignment_id BigInt
+  quantity                            Decimal                           @db.Decimal(8, 2)
+  price                               Decimal                           @db.Decimal(8, 2)
+  total_mrp                           Decimal                           @db.Decimal(8, 2)
+  special_request                     String?                           @db.VarChar(255)
+  courier_collected                   Boolean                           @default(false)
+  created_at                          DateTime?                         @db.Timestamp(0)
+  updated_at                          DateTime?                         @db.Timestamp(0)
+  orders                              orders                            @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "order_items_order_id_foreign")
+  store_product_variant_assignments   store_product_variant_assignments @relation(fields: [store_product_variant_assignment_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "order_items_store_product_variant_assignment_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model orders {
+  id                    BigInt            @id @default(autoincrement())
+  user_id               BigInt?
+  store_id              BigInt
+  module_id             BigInt
+  user_address_id       BigInt?
+  used_coupon_id        BigInt?
+  courier_id            BigInt?
+  courier_fee           Decimal?          @default(0) @db.Decimal(10, 2)
+  courier_cancel_reason String?           @db.VarChar(255)
+  tip                   Decimal           @default(0) @db.Decimal(10, 2)
+  notes                 String?
+  pay_reference         String?           @db.VarChar(255)
+  payment_method        String            @default("cash") @db.VarChar(255)
+  mrp                   Decimal           @db.Decimal(10, 2)
+  price                 Decimal           @db.Decimal(10, 2)
+  delivery_instruction  String?           @db.VarChar(255)
+  canceled_by           String?           @db.VarChar(255)
+  state                 String            @default("pending") @db.VarChar(255)
+  created_at            DateTime?         @db.Timestamp(0)
+  updated_at            DateTime?         @db.Timestamp(0)
+  deleted_at            DateTime?         @db.Timestamp(0)
+  courier_ratings       courier_ratings[]
+  order_items           order_items[]
+  couriers              couriers?         @relation(fields: [courier_id], references: [id], onUpdate: NoAction, map: "orders_courier_id_foreign")
+  modules               modules           @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "orders_module_id_foreign")
+  stores                stores            @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "orders_store_id_foreign")
+  coupons               coupons?          @relation(fields: [used_coupon_id], references: [id], onUpdate: NoAction, map: "orders_used_coupon_id_foreign")
+  user_address          user_address?     @relation(fields: [user_address_id], references: [id], onUpdate: NoAction, map: "orders_user_address_id_foreign")
+  users                 users?            @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "orders_user_id_foreign")
+  store_ratings         store_ratings[]
+}
+
+model otps {
+  id         BigInt    @id @default(autoincrement())
+  code       Int
+  user_id    BigInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "otps_user_id_foreign")
+}
+
+model permissions {
+  id                    BigInt                  @id @default(autoincrement())
+  name                  String                  @db.VarChar(255)
+  guard_name            String                  @db.VarChar(255)
+  module                String                  @db.VarChar(255)
+  created_at            DateTime?               @db.Timestamp(0)
+  updated_at            DateTime?               @db.Timestamp(0)
+  model_has_permissions model_has_permissions[]
+  role_has_permissions  role_has_permissions[]
+
+  @@unique([name, guard_name], map: "permissions_name_guard_name_unique")
+}
+
+model role_has_permissions {
+  permission_id BigInt
+  role_id       BigInt
+  permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "role_has_permissions_permission_id_foreign")
+  roles         roles       @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "role_has_permissions_role_id_foreign")
+
+  @@id([permission_id, role_id])
+}
+
+model roles {
+  id                   BigInt                 @id @default(autoincrement())
+  name                 String                 @db.VarChar(255)
+  guard_name           String                 @db.VarChar(255)
+  created_at           DateTime?              @db.Timestamp(0)
+  updated_at           DateTime?              @db.Timestamp(0)
+  model_has_roles      model_has_roles[]
+  role_has_permissions role_has_permissions[]
+
+  @@unique([name, guard_name], map: "roles_name_guard_name_unique")
+}
+
+model settings {
+  id         BigInt    @id @default(autoincrement())
+  key        String    @unique(map: "settings_key_unique") @db.VarChar(255)
+  value      String
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model sms_logs {
+  id                 BigInt    @id @default(autoincrement())
+  sms_raw_text       String?
+  variables          Bytes?
+  destination_number String    @db.VarChar(50)
+  class              String    @db.VarChar(255)
+  trigger_request    Bytes?
+  api_response       Bytes?
+  status             Boolean   @default(false)
+  created_at         DateTime? @db.Timestamp(0)
+  updated_at         DateTime? @db.Timestamp(0)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model spatial_ref_sys {
+  srid      Int     @id
+  auth_name String? @db.VarChar(256)
+  auth_srid Int?
+  srtext    String? @db.VarChar(2048)
+  proj4text String? @db.VarChar(2048)
+}
+
+model store_branches {
+  id                                   BigInt                                 @id @default(autoincrement())
+  name                                 String                                 @db.VarChar(255)
+  minimum_order                        Boolean?
+  minimum_order_amount                 Decimal                                @default(0) @db.Decimal(10, 2)
+  commission                           Decimal                                @default(0) @db.Decimal(10, 2)
+  courier_self_service                 Boolean                                @default(false)
+  schedule_order                       Boolean                                @default(false)
+  take_away                            Boolean                                @default(false)
+  free_delivery                        Boolean                                @default(false)
+  minimum_free_delivery_amount         Decimal                                @default(0) @db.Decimal(10, 2)
+  created_at                           DateTime?                              @db.Timestamp(0)
+  updated_at                           DateTime?                              @db.Timestamp(0)
+  deleted_at                           DateTime?                              @db.Timestamp(0)
+  store_product_assignment_permissions store_product_assignment_permissions[]
+  stores                               stores[]
+}
+
+model store_cart_items {
+  id               BigInt         @id @default(autoincrement())
+  cart_id          BigInt
+  store_product_id BigInt
+  unit_id          BigInt
+  quantity         Decimal        @db.Decimal(8, 2)
+  price            Decimal        @db.Decimal(8, 2)
+  total_mrp        Decimal        @db.Decimal(8, 2)
+  special_request  String?        @db.VarChar(255)
+  created_at       DateTime?      @db.Timestamp(0)
+  updated_at       DateTime?      @db.Timestamp(0)
+  carts            carts          @relation(fields: [cart_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_cart_items_cart_id_foreign")
+  store_products   store_products @relation(fields: [store_product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_cart_items_store_product_id_foreign")
+  units            units          @relation(fields: [unit_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_cart_items_unit_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model store_categories {
+  id         BigInt    @id @default(autoincrement())
+  module_id  BigInt
+  priority   Int       @default(0) @db.SmallInt
+  status     String    @default("active") @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  modules    modules   @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_categories_module_id_foreign")
+  stores     stores[]
+}
+
+model store_category_translations {
+  id                BigInt    @id @default(autoincrement())
+  store_category_id BigInt
+  locale            String    @db.VarChar(255)
+  name              String    @db.VarChar(255)
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+
+  @@index([locale], map: "store_category_translations_locale_index")
+  @@index([name], map: "store_category_translations_name_index")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model store_detail_contents {
+  id                                  BigInt                                @id @default(autoincrement())
+  display_name                        String                                @db.VarChar(255)
+  store_id                            BigInt
+  type                                String                                @db.VarChar(255)
+  category_more_btn                   Boolean?
+  deleted_at                          DateTime?                             @db.Timestamp(0)
+  created_at                          DateTime?                             @db.Timestamp(0)
+  updated_at                          DateTime?                             @db.Timestamp(0)
+  stores                              stores                                @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_detail_contents_store_id_foreign")
+  store_detail_divisions_and_contents store_detail_divisions_and_contents[]
+}
+
+model store_detail_division_translations {
+  id          BigInt    @id @default(autoincrement())
+  division_id BigInt
+  locale      String    @db.VarChar(255)
+  name        String    @db.VarChar(255)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+
+  @@index([locale], map: "store_detail_division_translations_locale_index")
+  @@index([name], map: "store_detail_division_translations_name_index")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model store_detail_divisions {
+  id                                                    BigInt                                                  @id @default(autoincrement())
+  display_name                                          String                                                  @db.VarChar(255)
+  type                                                  String                                                  @db.VarChar(255)
+  status                                                String                                                  @default("active") @db.VarChar(255)
+  store_id                                              BigInt
+  priority                                              Int                                                     @default(0) @db.SmallInt
+  deleted_at                                            DateTime?                                               @db.Timestamp(0)
+  created_at                                            DateTime?                                               @db.Timestamp(0)
+  updated_at                                            DateTime?                                               @db.Timestamp(0)
+  stores                                                stores                                                  @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_detail_divisions_store_id_foreign")
+  store_detail_divisions_and_contents                   store_detail_divisions_and_contents[]
+  store_detail_divisions_and_store_products_assignments store_detail_divisions_and_store_products_assignments[]
+}
+
+model store_detail_divisions_and_contents {
+  id                     BigInt                 @id @default(autoincrement())
+  division_id            BigInt
+  content_id             BigInt
+  created_at             DateTime?              @db.Timestamp(0)
+  updated_at             DateTime?              @db.Timestamp(0)
+  store_detail_contents  store_detail_contents  @relation(fields: [content_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_detail_divisions_and_contents_content_id_foreign")
+  store_detail_divisions store_detail_divisions @relation(fields: [division_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_detail_divisions_and_contents_division_id_foreign")
+}
+
+model store_detail_divisions_and_store_products_assignments {
+  id                                BigInt                            @id @default(autoincrement())
+  division_id                       BigInt
+  product_id                        BigInt
+  created_at                        DateTime?                         @db.Timestamp(0)
+  updated_at                        DateTime?                         @db.Timestamp(0)
+  store_detail_divisions            store_detail_divisions            @relation(fields: [division_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_division_id")
+  store_product_variant_assignments store_product_variant_assignments @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_product_id")
+}
+
+model store_devices {
+  id           BigInt    @id @default(autoincrement())
+  store_id     BigInt
+  device_token String    @db.VarChar(255)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  stores       stores    @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_devices_store_id_foreign")
+}
+
+model store_holidays {
+  id                    BigInt                  @id @default(autoincrement())
+  name                  String                  @db.VarChar(255)
+  start_date            DateTime                @db.Date
+  end_date              DateTime                @db.Date
+  close_time            DateTime                @db.Time(0)
+  open_time             DateTime                @db.Time(0)
+  old_close_time        DateTime?               @db.Time(0)
+  old_open_time         DateTime?               @db.Time(0)
+  created_at            DateTime?               @db.Timestamp(0)
+  updated_at            DateTime?               @db.Timestamp(0)
+  stores_store_holidays stores_store_holidays[]
+}
+
+model store_product_assignment_permissions {
+  id               BigInt         @id @default(autoincrement())
+  store_product_id BigInt
+  store_branch_id  BigInt
+  created_at       DateTime?      @db.Timestamp(0)
+  updated_at       DateTime?      @db.Timestamp(0)
+  store_branches   store_branches @relation(fields: [store_branch_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_assignment_permissions_store_branch_id_foreign")
+  store_products   store_products @relation(fields: [store_product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_assignment_permissions_store_product_id_foreign")
+}
+
+model store_product_variant_assignments {
+  id                                                    BigInt                                                  @id @default(autoincrement())
+  store_id                                              BigInt
+  store_product_variant_id                              BigInt
+  stock                                                 Decimal                                                 @db.Decimal(8, 2)
+  price                                                 Decimal                                                 @db.Decimal(8, 2)
+  mrp                                                   Decimal                                                 @db.Decimal(8, 2)
+  min_order_quantity                                    Decimal?                                                @db.Decimal(8, 2)
+  max_order_quantity                                    Decimal?                                                @db.Decimal(8, 2)
+  created_at                                            DateTime?                                               @db.Timestamp(0)
+  updated_at                                            DateTime?                                               @db.Timestamp(0)
+  deleted_at                                            DateTime?                                               @db.Timestamp(0)
+  order_items                                           order_items[]
+  store_detail_divisions_and_store_products_assignments store_detail_divisions_and_store_products_assignments[]
+  store_product_variants                                store_product_variants                                  @relation(fields: [store_product_variant_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "spv_assignment_fk")
+  stores                                                stores                                                  @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_variant_assignments_store_id_foreign")
+}
+
+model store_product_variant_barcodes {
+  id                       BigInt                 @id @default(autoincrement())
+  store_product_variant_id BigInt
+  barcode                  String                 @db.VarChar(255)
+  created_at               DateTime?              @db.Timestamp(0)
+  updated_at               DateTime?              @db.Timestamp(0)
+  store_product_variants   store_product_variants @relation(fields: [store_product_variant_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_variant_barcodes_store_product_variant_id_foreign")
+}
+
+model store_product_variant_ratings {
+  id                       BigInt                 @id @default(autoincrement())
+  store_product_variant_id BigInt
+  user_id                  BigInt
+  rating                   Decimal                @db.Decimal(2, 1)
+  comment                  String?                @db.VarChar(255)
+  created_at               DateTime?              @db.Timestamp(0)
+  updated_at               DateTime?              @db.Timestamp(0)
+  deleted_at               DateTime?              @db.Timestamp(0)
+  store_product_variants   store_product_variants @relation(fields: [store_product_variant_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_variant_ratings_store_product_variant_id_foreign")
+  users                    users                  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_variant_ratings_user_id_foreign")
+}
+
+model store_product_variant_tags {
+  id                       BigInt                 @id @default(autoincrement())
+  store_product_variant_id BigInt
+  tag_id                   BigInt
+  created_at               DateTime?              @db.Timestamp(0)
+  updated_at               DateTime?              @db.Timestamp(0)
+  store_product_variants   store_product_variants @relation(fields: [store_product_variant_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_variant_tags_store_product_variant_id_foreign")
+  tags                     tags                   @relation(fields: [tag_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_variant_tags_tag_id_foreign")
+}
+
+model store_product_variant_translations {
+  id                       BigInt                 @id @default(autoincrement())
+  store_product_variant_id BigInt
+  locale                   String                 @db.VarChar(255)
+  name                     String                 @db.VarChar(255)
+  description              String?                @db.VarChar(255)
+  created_at               DateTime?              @db.Timestamp(0)
+  updated_at               DateTime?              @db.Timestamp(0)
+  store_product_variants   store_product_variants @relation(fields: [store_product_variant_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_spv_translation")
+
+  @@index([locale], map: "store_product_variant_translations_locale_index")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model store_product_variant_uploads {
+  id                       BigInt                 @id @default(autoincrement())
+  object_key               String                 @db.VarChar(255)
+  size                     BigInt
+  mime_type                String                 @db.VarChar(100)
+  extension                String                 @db.VarChar(10)
+  original_name            String                 @db.VarChar(255)
+  store_product_variant_id BigInt
+  type                     String                 @default("thumbnail") @db.VarChar(255)
+  deleted_at               DateTime?              @db.Timestamp(0)
+  created_at               DateTime?              @db.Timestamp(0)
+  updated_at               DateTime?              @db.Timestamp(0)
+  store_product_variants   store_product_variants @relation(fields: [store_product_variant_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_variant_uploads_store_product_variant_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model store_product_variants {
+  id                                   BigInt                                 @id @default(autoincrement())
+  store_product_id                     BigInt
+  material_code                        String                                 @db.VarChar(255)
+  order_count                          Int                                    @default(0)
+  rating                               String                                 @default("0") @db.VarChar(255)
+  is_recommended                       Boolean
+  is_organic                           Boolean
+  is_halal                             Boolean
+  width                                Int                                    @default(0)
+  length                               Int                                    @default(0)
+  height                               Int                                    @default(0)
+  weight                               Int                                    @default(0)
+  volume                               Int                                    @default(0)
+  status                               String                                 @default("active") @db.VarChar(255)
+  is_vegan                             Boolean
+  is_popular_item                      Boolean
+  unit_id                              BigInt
+  created_at                           DateTime?                              @db.Timestamp(0)
+  updated_at                           DateTime?                              @db.Timestamp(0)
+  store_product_variant_assignments    store_product_variant_assignments[]
+  store_product_variant_barcodes       store_product_variant_barcodes[]
+  store_product_variant_ratings        store_product_variant_ratings[]
+  store_product_variant_tags           store_product_variant_tags[]
+  store_product_variant_translations   store_product_variant_translations[]
+  store_product_variant_uploads        store_product_variant_uploads[]
+  store_products                       store_products                         @relation(fields: [store_product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_variants_store_product_id_foreign")
+  units                                units                                  @relation(fields: [unit_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_variants_unit_id_foreign")
+  user_favorite_store_product_variants user_favorite_store_product_variants[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model store_products {
+  id                                   BigInt                                 @id @default(autoincrement())
+  tax_value                            Decimal                                @db.Decimal(8, 2)
+  tax_type                             String                                 @default("percentage") @db.VarChar(255)
+  status                               String                                 @default("active") @db.VarChar(255)
+  created_at                           DateTime?                              @db.Timestamp(0)
+  updated_at                           DateTime?                              @db.Timestamp(0)
+  deleted_at                           DateTime?                              @db.Timestamp(0)
+  store_cart_items                     store_cart_items[]
+  store_product_assignment_permissions store_product_assignment_permissions[]
+  store_product_variants               store_product_variants[]
+  store_products_categories            store_products_categories[]
+}
+
+model store_products_categories {
+  id               BigInt          @id @default(autoincrement())
+  store_product_id BigInt?
+  category_id      BigInt?
+  created_at       DateTime?       @db.Timestamp(0)
+  updated_at       DateTime?       @db.Timestamp(0)
+  categories       categories?     @relation(fields: [category_id], references: [id], onUpdate: NoAction, map: "store_products_categories_category_id_foreign")
+  store_products   store_products? @relation(fields: [store_product_id], references: [id], onUpdate: NoAction, map: "store_products_categories_store_product_id_foreign")
+}
+
+model store_ratings {
+  id         BigInt    @id @default(autoincrement())
+  store_id   BigInt
+  order_id   BigInt
+  star_count Decimal   @db.Decimal(8, 2)
+  comment    String?   @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  orders     orders    @relation(fields: [order_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_ratings_order_id_foreign")
+  stores     stores    @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_ratings_store_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model stores {
+  id                                BigInt                              @id @default(autoincrement())
+  module_id                         BigInt
+  name                              String                              @db.VarChar(255)
+  store_code                        String                              @db.VarChar(255)
+  currency_id                       BigInt?
+  phone                             String                              @db.VarChar(255)
+  country_id                        BigInt?
+  city_id                           BigInt?
+  email                             String?                             @db.VarChar(255)
+  password                          String?                             @db.VarChar(255)
+  lat                               String                              @db.VarChar(255)
+  lng                               String                              @db.VarChar(255)
+  status                            String                              @default("active") @db.VarChar(255)
+  rating                            String                              @default("0") @db.VarChar(255)
+  store_category_id                 BigInt?
+  have_vegan                        Boolean
+  have_not_vegan                    Boolean
+  open_time                         DateTime                            @db.Time(0)
+  close_time                        DateTime                            @db.Time(0)
+  zone_id                           BigInt?
+  branch_id                         BigInt?
+  created_at                        DateTime?                           @db.Timestamp(0)
+  updated_at                        DateTime?                           @db.Timestamp(0)
+  deleted_at                        DateTime?                           @db.Timestamp(0)
+  carts                             carts[]
+  couriers                          couriers[]
+  order_based_campaign_stores       order_based_campaign_stores[]
+  orders                            orders[]
+  store_detail_contents             store_detail_contents[]
+  store_detail_divisions            store_detail_divisions[]
+  store_devices                     store_devices[]
+  store_product_variant_assignments store_product_variant_assignments[]
+  store_ratings                     store_ratings[]
+  store_branches                    store_branches?                     @relation(fields: [branch_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "stores_branch_id_foreign")
+  cities                            cities?                             @relation(fields: [city_id], references: [id], onUpdate: NoAction, map: "stores_city_id_foreign")
+  countries                         countries?                          @relation(fields: [country_id], references: [id], onUpdate: NoAction, map: "stores_country_id_foreign")
+  currencies                        currencies?                         @relation(fields: [currency_id], references: [id], onUpdate: NoAction, map: "stores_currency_id_foreign")
+  modules                           modules                             @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "stores_module_id_foreign")
+  store_categories                  store_categories?                   @relation(fields: [store_category_id], references: [id], onUpdate: NoAction, map: "stores_store_category_id_foreign")
+  zones                             zones?                              @relation(fields: [zone_id], references: [id], onUpdate: NoAction, map: "stores_zone_id_foreign")
+  stores_store_holidays             stores_store_holidays[]
+  user_favorite_stores              user_favorite_stores[]
+}
+
+model stores_store_holidays {
+  id               BigInt         @id @default(autoincrement())
+  store_holiday_id BigInt
+  store_id         BigInt
+  created_at       DateTime?      @db.Timestamp(0)
+  updated_at       DateTime?      @db.Timestamp(0)
+  store_holidays   store_holidays @relation(fields: [store_holiday_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "stores_store_holidays_store_holiday_id_foreign")
+  stores           stores         @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "stores_store_holidays_store_id_foreign")
+}
+
+model system_courier_ratings {
+  id         BigInt    @id @default(autoincrement())
+  courier_id BigInt
+  star_count Decimal   @db.Decimal(2, 1)
+  comment    String?   @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  couriers   couriers  @relation(fields: [courier_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "system_courier_ratings_courier_id_foreign")
+}
+
+model tags {
+  id                         BigInt                       @id @default(autoincrement())
+  name                       String                       @db.VarChar(255)
+  priority                   Int                          @default(0)
+  created_at                 DateTime?                    @db.Timestamp(0)
+  updated_at                 DateTime?                    @db.Timestamp(0)
+  deleted_at                 DateTime?                    @db.Timestamp(0)
+  store_product_variant_tags store_product_variant_tags[]
+}
+
+model telescope_entries {
+  sequence                BigInt                   @id @default(autoincrement())
+  uuid                    String                   @unique(map: "telescope_entries_uuid_unique") @db.Uuid
+  batch_id                String                   @db.Uuid
+  family_hash             String?                  @db.VarChar(255)
+  should_display_on_index Boolean                  @default(true)
+  type                    String                   @db.VarChar(20)
+  content                 String
+  created_at              DateTime?                @db.Timestamp(0)
+  telescope_entries_tags  telescope_entries_tags[]
+
+  @@index([batch_id], map: "telescope_entries_batch_id_index")
+  @@index([created_at], map: "telescope_entries_created_at_index")
+  @@index([family_hash], map: "telescope_entries_family_hash_index")
+  @@index([type, should_display_on_index], map: "telescope_entries_type_should_display_on_index_index")
+}
+
+model telescope_entries_tags {
+  entry_uuid        String            @db.Uuid
+  tag               String            @db.VarChar(255)
+  telescope_entries telescope_entries @relation(fields: [entry_uuid], references: [uuid], onDelete: Cascade, onUpdate: NoAction, map: "telescope_entries_tags_entry_uuid_foreign")
+
+  @@id([entry_uuid, tag])
+  @@index([tag], map: "telescope_entries_tags_tag_index")
+}
+
+model telescope_monitoring {
+  tag String @id @db.VarChar(255)
+}
+
+model tips {
+  id          BigInt     @id @default(autoincrement())
+  value       Int        @db.SmallInt
+  currency_id BigInt
+  created_at  DateTime?  @db.Timestamp(0)
+  updated_at  DateTime?  @db.Timestamp(0)
+  deleted_at  DateTime?  @db.Timestamp(0)
+  currencies  currencies @relation(fields: [currency_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "tips_currency_id_foreign")
+}
+
+model unit_translations {
+  id         BigInt    @id @default(autoincrement())
+  unit_id    BigInt
+  locale     String    @db.VarChar(255)
+  name       String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  units      units     @relation(fields: [unit_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "unit_translations_unit_id_foreign")
+
+  @@index([locale], map: "unit_translations_locale_index")
+}
+
+model unit_type_translations {
+  id           BigInt     @id @default(autoincrement())
+  unit_type_id BigInt
+  locale       String     @db.VarChar(255)
+  name         String     @db.VarChar(255)
+  created_at   DateTime?  @db.Timestamp(0)
+  updated_at   DateTime?  @db.Timestamp(0)
+  unit_types   unit_types @relation(fields: [unit_type_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "unit_type_translations_unit_type_id_foreign")
+
+  @@index([locale], map: "unit_type_translations_locale_index")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model unit_types {
+  id                     BigInt                   @id @default(autoincrement())
+  status                 String                   @default("active") @db.VarChar(255)
+  created_at             DateTime?                @db.Timestamp(0)
+  updated_at             DateTime?                @db.Timestamp(0)
+  deleted_at             DateTime?                @db.Timestamp(0)
+  unit_type_translations unit_type_translations[]
+  units                  units[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model units {
+  id                     BigInt                   @id @default(autoincrement())
+  unit_type_id           BigInt
+  symbol                 String                   @db.VarChar(255)
+  conversion             String                   @db.VarChar(255)
+  status                 String                   @default("active") @db.VarChar(255)
+  created_at             DateTime?                @db.Timestamp(0)
+  updated_at             DateTime?                @db.Timestamp(0)
+  deleted_at             DateTime?                @db.Timestamp(0)
+  store_cart_items       store_cart_items[]
+  store_product_variants store_product_variants[]
+  unit_translations      unit_translations[]
+  unit_types             unit_types               @relation(fields: [unit_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "units_unit_type_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model uploads {
+  id              BigInt    @id @default(autoincrement())
+  object_key      String    @db.VarChar(255)
+  size            BigInt
+  mime_type       String    @db.VarChar(100)
+  extension       String    @db.VarChar(10)
+  original_name   String    @db.VarChar(255)
+  uploadable_type String?   @db.VarChar(255)
+  uploadable_id   BigInt?
+  type            String    @default("thumbnail") @db.VarChar(255)
+  deleted_at      DateTime? @db.Timestamp(0)
+  created_at      DateTime? @db.Timestamp(0)
+  updated_at      DateTime? @db.Timestamp(0)
+
+  @@index([uploadable_type, uploadable_id], map: "uploads_uploadable_type_uploadable_id_index")
+}
+
+model used_coupons {
+  id                 BigInt           @id @default(autoincrement())
+  assigned_coupon_id BigInt
+  user_id            BigInt
+  created_at         DateTime?        @db.Timestamp(0)
+  updated_at         DateTime?        @db.Timestamp(0)
+  deleted_at         DateTime?        @db.Timestamp(0)
+  assigned_coupons   assigned_coupons @relation(fields: [assigned_coupon_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "used_coupons_assigned_coupon_id_foreign")
+  users              users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "used_coupons_user_id_foreign")
+}
+
+model user_address {
+  id          BigInt    @id @default(autoincrement())
+  type        String    @db.VarChar(255)
+  phone       String    @db.VarChar(255)
+  lng         String    @db.VarChar(255)
+  lat         String    @db.VarChar(255)
+  user_id     BigInt
+  person_name String    @db.VarChar(255)
+  floor       String?   @db.VarChar(255)
+  road        String?   @db.VarChar(255)
+  house       String?   @db.VarChar(255)
+  is_selected Boolean   @default(false)
+  zone_id     BigInt?
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  deleted_at  DateTime? @db.Timestamp(0)
+  orders      orders[]
+  users       users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_address_user_id_foreign")
+  zones       zones?    @relation(fields: [zone_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_address_zone_id_foreign")
+}
+
+model user_devices {
+  id           BigInt    @id @default(autoincrement())
+  user_id      BigInt
+  device_token String    @db.VarChar(255)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  users        users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_devices_user_id_foreign")
+}
+
+model user_favorite_store_product_variants {
+  id                       BigInt                 @id @default(autoincrement())
+  user_id                  BigInt
+  store_product_variant_id BigInt
+  created_at               DateTime?              @db.Timestamp(0)
+  updated_at               DateTime?              @db.Timestamp(0)
+  deleted_at               DateTime?              @db.Timestamp(0)
+  store_product_variants   store_product_variants @relation(fields: [store_product_variant_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_store_product_variant")
+  users                    users                  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_favorite_store_product_variants_user_id_foreign")
+}
+
+model user_favorite_stores {
+  id         BigInt    @id @default(autoincrement())
+  user_id    BigInt
+  store_id   BigInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  stores     stores    @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_favorite_stores_store_id_foreign")
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_favorite_stores_user_id_foreign")
+}
+
+model user_interested_categories {
+  id          BigInt     @id @default(autoincrement())
+  user_id     BigInt
+  category_id BigInt
+  created_at  DateTime?  @db.Timestamp(0)
+  updated_at  DateTime?  @db.Timestamp(0)
+  deleted_at  DateTime?  @db.Timestamp(0)
+  categories  categories @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_interested_categories_category_id_foreign")
+  users       users      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_interested_categories_user_id_foreign")
+}
+
+model user_notifications {
+  id         BigInt    @id @default(autoincrement())
+  user_id    BigInt
+  title      String    @db.VarChar(255)
+  content    String    @db.VarChar(255)
+  image      String    @db.VarChar(255)
+  read_at    DateTime? @db.Timestamp(0)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_notifications_user_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model users {
+  id                                   BigInt                                 @id @default(autoincrement())
+  name                                 String                                 @db.VarChar(255)
+  password                             String?                                @db.VarChar(255)
+  remember_token                       String?                                @db.VarChar(255)
+  country_code                         String                                 @db.VarChar(255)
+  phone                                String                                 @db.VarChar(255)
+  bonus_card_no                        String?                                @db.VarChar(255)
+  ref_code                             String?                                @db.VarChar(255)
+  birthday                             DateTime                               @db.Date
+  gender                               String                                 @db.VarChar(255)
+  want_notification                    Boolean                                @default(true)
+  created_at                           DateTime?                              @db.Timestamp(0)
+  updated_at                           DateTime?                              @db.Timestamp(0)
+  deleted_at                           DateTime?                              @db.Timestamp(0)
+  city_id                              BigInt
+  assigned_coupons                     assigned_coupons[]
+  carts                                carts[]
+  orders                               orders[]
+  otps                                 otps[]
+  store_product_variant_ratings        store_product_variant_ratings[]
+  used_coupons                         used_coupons[]
+  user_address                         user_address[]
+  user_devices                         user_devices[]
+  user_favorite_store_product_variants user_favorite_store_product_variants[]
+  user_favorite_stores                 user_favorite_stores[]
+  user_interested_categories           user_interested_categories[]
+  user_notifications                   user_notifications[]
+  cities                               cities                                 @relation(fields: [city_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_city_id_foreign")
+
+  @@unique([phone, bonus_card_no, ref_code, deleted_at], map: "users_phone_bonus_card_no_ref_code_deleted_at_unique")
+}
+
+model zone_pricing {
+  id             BigInt     @id @default(autoincrement())
+  zone_id        BigInt
+  currency_id    BigInt
+  price_for_100m Decimal    @db.Decimal(10, 2)
+  created_at     DateTime?  @db.Timestamp(0)
+  updated_at     DateTime?  @db.Timestamp(0)
+  deleted_at     DateTime?  @db.Timestamp(0)
+  currencies     currencies @relation(fields: [currency_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "zone_pricing_currency_id_foreign")
+  zones          zones      @relation(fields: [zone_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "zone_pricing_zone_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model zones {
+  id                         BigInt                       @id @default(autoincrement())
+  name                       String                       @db.VarChar(255)
+  type                       String                       @db.VarChar(255)
+  coordinates                Unsupported("geometry")
+  status                     String                       @default("active") @db.VarChar(255)
+  created_at                 DateTime?                    @db.Timestamp(0)
+  updated_at                 DateTime?                    @db.Timestamp(0)
+  deleted_at                 DateTime?                    @db.Timestamp(0)
+  modules_zones              modules_zones[]
+  order_based_campaign_zones order_based_campaign_zones[]
+  stores                     stores[]
+  user_address               user_address[]
+  zone_pricing               zone_pricing[]
+}
