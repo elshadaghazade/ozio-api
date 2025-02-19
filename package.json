@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "dev": "nodemon --config nodemon.json --exec ts-node --project tsconfig.development.json src/server.ts",
-    "build": "tsc",
+    "build": "tsc --build tsconfig.json",
     "start": "node dist/server.js"
   },
   "keywords": [],

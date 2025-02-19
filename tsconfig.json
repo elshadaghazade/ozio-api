@@ -10,8 +10,8 @@
     "isolatedModules": true,
     "moduleDetection": "force",
 
-    "outDir": "dist",
-    "rootDir": "src",
+    "outDir": "./dist",
+    "rootDir": "./src",
     "esModuleInterop": true,
     "composite": true,
     "declaration": true,
