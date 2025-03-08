@@ -13,7 +13,10 @@ const options: swaggerJsdoc.Options = {
         },
         servers: [{ url: `http://localhost:${config.port}` }],
     },
-    apis: ["src/controllers/**/*.ts"],
+    apis: [
+        "src/controllers/**/swaggerdoc.ts",
+        "src/controllers/**/*.ts"
+    ],
 };
 
 const swaggerSpec = swaggerJsdoc(options);

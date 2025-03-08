@@ -1,4 +1,4 @@
-import prisma from "../config/db"
+import prisma from "@/config/db"
 
 export const sampleHomeService = async () => {
     return await prisma.admins.findMany({

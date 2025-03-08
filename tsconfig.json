@@ -10,8 +10,18 @@
     "isolatedModules": true,
     "moduleDetection": "force",
 
+    "baseUrl": "./",
+
+    "paths": {
+      "@/*": ["./src/*"],
+      "@prisma/*": ["./prisma/*"]
+    },
+
     "outDir": "./dist",
     "rootDir": "./src",
+
+    "moduleResolution": "node",
+
     "esModuleInterop": true,
     "composite": true,
     "declaration": true,

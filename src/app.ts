@@ -1,10 +1,11 @@
-import express, { Request, Response, NextFunction } from "express";
+import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import routes from "./routes/v1";
 import logger from "./config/logger";
 import { setupSwagger } from "./config/swagger";
+import { errorHandler } from "./middleware/errorHandler";
 
 const app = express();
 
@@ -22,14 +23,7 @@ app.get("/", (_, res) => {
     res.json({ message: "API is running!" });
 });
 
-app.use((err: any, _: Request, res: Response, next: NextFunction) => {
-    logger.error(err.stack);
-    if (err.headersSent) {
-        return next(err);
-    }
-
-    res.status(500).json({ message: "Internal Server Error" });
-});
+app.use(errorHandler);
 
 setupSwagger(app);
 

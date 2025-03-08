@@ -1,7 +1,7 @@
-import courierHandler from "./sockets/courier";
-import orderHandler from "./sockets/order";
-import supportHandler from "./sockets/support";
-import { initializeSocket } from "./config/socket";
+import courierHandler from "@/sockets/courier";
+import orderHandler from "@/sockets/order";
+import supportHandler from "@/sockets/support";
+import { initializeSocket } from "@/config/socket";
 import { Server } from "http";
 
 export default async function setupSocket(server: Server) {

@@ -1,5 +1,6 @@
+import { sampleHomeService } from "@/services/sample.service";
+import { ApiResponse } from "@/utils/apiResponse";
 import { Request, Response } from 'express';
-import { sampleHomeService } from '../../services/sample.service';
 
 /**
  * @swagger
@@ -32,10 +33,9 @@ import { sampleHomeService } from '../../services/sample.service';
  *                         type: string
  */
 export const sampleHomeController = async (_: Request, res: Response) => {
+    const result = await sampleHomeService();
+ 
+    const payload = ApiResponse.success('OK', result);
 
-    res.json({
-        data: {
-            admins: await sampleHomeService()
-        }
-    });
-};
+    res.json(payload);
+}

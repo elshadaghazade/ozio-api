@@ -70,12 +70,13 @@ model assigned_coupons {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model brands {
-  id         BigInt    @id @default(autoincrement())
-  name       String    @db.VarChar(255)
-  status     String    @default("active") @db.VarChar(255)
-  created_at DateTime? @db.Timestamp(0)
-  updated_at DateTime? @db.Timestamp(0)
-  deleted_at DateTime? @db.Timestamp(0)
+  id                               BigInt                             @id @default(autoincrement())
+  name                             String                             @db.VarChar(255)
+  status                           String                             @default("active") @db.VarChar(255)
+  created_at                       DateTime?                          @db.Timestamp(0)
+  updated_at                       DateTime?                          @db.Timestamp(0)
+  deleted_at                       DateTime?                          @db.Timestamp(0)
+  store_detail_contents_and_brands store_detail_contents_and_brands[]
 }
 
 model cache {
@@ -599,16 +600,18 @@ model store_category_translations {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model store_detail_contents {
-  id                                  BigInt                                @id @default(autoincrement())
-  display_name                        String                                @db.VarChar(255)
-  store_id                            BigInt
-  type                                String                                @db.VarChar(255)
-  category_more_btn                   Boolean?
-  deleted_at                          DateTime?                             @db.Timestamp(0)
-  created_at                          DateTime?                             @db.Timestamp(0)
-  updated_at                          DateTime?                             @db.Timestamp(0)
-  stores                              stores                                @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_detail_contents_store_id_foreign")
-  store_detail_divisions_and_contents store_detail_divisions_and_contents[]
+  id                                       BigInt                                     @id @default(autoincrement())
+  display_name                             String                                     @db.VarChar(255)
+  store_id                                 BigInt
+  type                                     String                                     @db.VarChar(255)
+  category_more_btn                        Boolean?
+  deleted_at                               DateTime?                                  @db.Timestamp(0)
+  created_at                               DateTime?                                  @db.Timestamp(0)
+  updated_at                               DateTime?                                  @db.Timestamp(0)
+  stores                                   stores                                     @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_detail_contents_store_id_foreign")
+  store_detail_contents_and_brands         store_detail_contents_and_brands[]
+  store_detail_contents_and_store_products store_detail_contents_and_store_products[]
+  store_detail_divisions_and_contents      store_detail_divisions_and_contents[]
 }
 
 model store_detail_division_translations {
@@ -677,6 +680,7 @@ model store_holidays {
   open_time             DateTime                @db.Time(0)
   old_close_time        DateTime?               @db.Time(0)
   old_open_time         DateTime?               @db.Time(0)
+  assign_all_stores     Boolean                 @default(false)
   created_at            DateTime?               @db.Timestamp(0)
   updated_at            DateTime?               @db.Timestamp(0)
   stores_store_holidays stores_store_holidays[]
@@ -805,17 +809,18 @@ model store_product_variants {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model store_products {
-  id                                   BigInt                                 @id @default(autoincrement())
-  tax_value                            Decimal                                @db.Decimal(8, 2)
-  tax_type                             String                                 @default("percentage") @db.VarChar(255)
-  status                               String                                 @default("active") @db.VarChar(255)
-  created_at                           DateTime?                              @db.Timestamp(0)
-  updated_at                           DateTime?                              @db.Timestamp(0)
-  deleted_at                           DateTime?                              @db.Timestamp(0)
-  store_cart_items                     store_cart_items[]
-  store_product_assignment_permissions store_product_assignment_permissions[]
-  store_product_variants               store_product_variants[]
-  store_products_categories            store_products_categories[]
+  id                                       BigInt                                     @id @default(autoincrement())
+  tax_value                                Decimal                                    @db.Decimal(8, 2)
+  tax_type                                 String                                     @default("percentage") @db.VarChar(255)
+  status                                   String                                     @default("active") @db.VarChar(255)
+  created_at                               DateTime?                                  @db.Timestamp(0)
+  updated_at                               DateTime?                                  @db.Timestamp(0)
+  deleted_at                               DateTime?                                  @db.Timestamp(0)
+  store_cart_items                         store_cart_items[]
+  store_detail_contents_and_store_products store_detail_contents_and_store_products[]
+  store_product_assignment_permissions     store_product_assignment_permissions[]
+  store_product_variants                   store_product_variants[]
+  store_products_categories                store_products_categories[]
 }
 
 model store_products_categories {
@@ -1173,4 +1178,58 @@ model zones {
   stores                     stores[]
   user_address               user_address[]
   zone_pricing               zone_pricing[]
+}
+
+model courier_mission_stores {
+  id                 BigInt @id @default(autoincrement())
+  courier_mission_id BigInt
+  store_id           BigInt
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model courier_missions {
+  id           BigInt    @id @default(autoincrement())
+  start_date   DateTime  @db.Date
+  end_date     DateTime  @db.Date
+  start_time   DateTime  @db.Time(0)
+  end_time     DateTime  @db.Time(0)
+  order_count  Int
+  bonus_amount Decimal   @db.Decimal(10, 2)
+  all_stores   Boolean   @default(false)
+  status       String    @default("active") @db.VarChar(255)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  deleted_at   DateTime? @db.Timestamp(0)
+}
+
+model store_detail_content_translations {
+  id         BigInt    @id @default(autoincrement())
+  content_id BigInt
+  locale     String    @db.VarChar(255)
+  name       String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+
+  @@index([locale], map: "store_detail_content_translations_locale_index")
+  @@index([name], map: "store_detail_content_translations_name_index")
+}
+
+model store_detail_contents_and_brands {
+  id                    BigInt                @id @default(autoincrement())
+  content_id            BigInt
+  brand_id              BigInt
+  created_at            DateTime?             @db.Timestamp(0)
+  updated_at            DateTime?             @db.Timestamp(0)
+  brands                brands                @relation(fields: [brand_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_detail_contents_and_brands_brand_id_foreign")
+  store_detail_contents store_detail_contents @relation(fields: [content_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_detail_contents_and_brands_content_id_foreign")
+}
+
+model store_detail_contents_and_store_products {
+  id                    BigInt                @id @default(autoincrement())
+  content_id            BigInt
+  product_id            BigInt
+  created_at            DateTime?             @db.Timestamp(0)
+  updated_at            DateTime?             @db.Timestamp(0)
+  store_detail_contents store_detail_contents @relation(fields: [content_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_detail_contents_and_store_products_content_id_foreign")
+  store_products        store_products        @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_detail_contents_and_store_products_product_id_foreign")
 }

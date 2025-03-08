@@ -1,9 +1,9 @@
 import express from "express";
 import { createServer } from "http";
-import setupSocket from "./socket";
-import routesV1 from "./routes/v1";
-import logger from "./config/logger";
-import app from './app';
+import setupSocket from "@/socket";
+import routesV1 from "@/routes/v1";
+import logger from "@/config/logger";
+import app from '@/app';
 
 const server = createServer(app);
 
