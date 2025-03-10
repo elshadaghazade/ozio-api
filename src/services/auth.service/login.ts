@@ -21,6 +21,7 @@ export const login = async ({
     let user = await prisma.users.findFirst({
         where: {
             phone,
+            deleted_at: null
         },
         select: {
             id: true,
@@ -63,7 +64,8 @@ export const login = async ({
             updated_at: new Date()
         },
         where: {
-            id: user.id
+            id: user.id,
+            deleted_at: null
         },
         select: {
             id: true,

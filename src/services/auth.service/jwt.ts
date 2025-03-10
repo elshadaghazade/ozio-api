@@ -16,7 +16,8 @@ export const getJwtToken = async (userId: number) => {
     try {
         const user = await prisma.users.findUniqueOrThrow({
             where: {
-                id: Number(userId)
+                id: Number(userId),
+                deleted_at: null
             },
             select: {
                 id: true,
