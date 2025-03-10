@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "dotenv -e .env.development -- nodemon --config nodemon.json --exec ts-node -r tsconfig-paths/register --project tsconfig.development.json src/server.ts",
     "build": "NODE_ENV=production dotenv -e .env -- tsc --build tsconfig.json && tsc-alias -p tsconfig.json",
-    "start": "NODE_ENV=production dotenv -e .env.development -- node dist/server.js",
+    "start": "NODE_ENV=production dotenv -e .env -- node dist/server.js",
     "dbpull": "dotenv -e .env.development -- prisma db pull && prisma generate"
   },
   "keywords": [],
