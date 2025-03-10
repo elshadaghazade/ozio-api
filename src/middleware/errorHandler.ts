@@ -3,13 +3,12 @@ import { HttpException } from "@/exceptions/HttpException";
 import { ApiResponse } from "@/utils/apiResponse";
 import logger from "@/config/logger";
 
-// Explicitly typing the function as an Express error handler
-export function errorHandler(
+export const errorHandler = (
     err: any,
     _: Request,
     res: Response,
     next: NextFunction
-) {
+) => {
 
     logger.error(err.stack);
     if (err.headersSent) {

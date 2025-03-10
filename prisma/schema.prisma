@@ -300,7 +300,7 @@ model languages {
   locale     String    @db.VarChar(255)
   flag       String    @db.VarChar(255)
   is_default Boolean   @default(false)
-  status     Boolean   @default(true)
+  status     String    @default("active") @db.VarChar(255)
   sort_order Int       @default(0)
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
@@ -700,18 +700,19 @@ model store_product_variant_assignments {
   id                                                    BigInt                                                  @id @default(autoincrement())
   store_id                                              BigInt
   store_product_variant_id                              BigInt
-  stock                                                 Decimal                                                 @db.Decimal(8, 2)
-  price                                                 Decimal                                                 @db.Decimal(8, 2)
-  mrp                                                   Decimal                                                 @db.Decimal(8, 2)
+  stock                                                 Decimal                                                 @default(0) @db.Decimal(8, 2)
+  price                                                 Decimal                                                 @default(0) @db.Decimal(8, 2)
+  mrp                                                   Decimal                                                 @default(0) @db.Decimal(8, 2)
   min_order_quantity                                    Decimal?                                                @db.Decimal(8, 2)
   max_order_quantity                                    Decimal?                                                @db.Decimal(8, 2)
+  assign_all_stores                                     Boolean
   created_at                                            DateTime?                                               @db.Timestamp(0)
   updated_at                                            DateTime?                                               @db.Timestamp(0)
   deleted_at                                            DateTime?                                               @db.Timestamp(0)
   order_items                                           order_items[]
   store_detail_divisions_and_store_products_assignments store_detail_divisions_and_store_products_assignments[]
-  store_product_variants                                store_product_variants                                  @relation(fields: [store_product_variant_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "spv_assignment_fk")
   stores                                                stores                                                  @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_variant_assignments_store_id_foreign")
+  store_product_variants                                store_product_variants                                  @relation(fields: [store_product_variant_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "spv_assignment_fk")
 }
 
 model store_product_variant_barcodes {
@@ -793,6 +794,7 @@ model store_product_variants {
   status                               String                                 @default("active") @db.VarChar(255)
   is_vegan                             Boolean
   is_popular_item                      Boolean
+  color_id                             BigInt
   unit_id                              BigInt
   created_at                           DateTime?                              @db.Timestamp(0)
   updated_at                           DateTime?                              @db.Timestamp(0)
@@ -802,6 +804,7 @@ model store_product_variants {
   store_product_variant_tags           store_product_variant_tags[]
   store_product_variant_translations   store_product_variant_translations[]
   store_product_variant_uploads        store_product_variant_uploads[]
+  colors                               colors                                 @relation(fields: [color_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_variants_color_id_foreign")
   store_products                       store_products                         @relation(fields: [store_product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_variants_store_product_id_foreign")
   units                                units                                  @relation(fields: [unit_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_variants_unit_id_foreign")
   user_favorite_store_product_variants user_favorite_store_product_variants[]
@@ -864,6 +867,7 @@ model stores {
   store_category_id                 BigInt?
   have_vegan                        Boolean
   have_not_vegan                    Boolean
+  has_packet                        Boolean
   open_time                         DateTime                            @db.Time(0)
   close_time                        DateTime                            @db.Time(0)
   zone_id                           BigInt?
@@ -1121,19 +1125,17 @@ model user_notifications {
 model users {
   id                                   BigInt                                 @id @default(autoincrement())
   name                                 String                                 @db.VarChar(255)
-  password                             String?                                @db.VarChar(255)
   remember_token                       String?                                @db.VarChar(255)
-  country_code                         String                                 @db.VarChar(255)
+  city_id                              BigInt
   phone                                String                                 @db.VarChar(255)
-  bonus_card_no                        String?                                @db.VarChar(255)
   ref_code                             String?                                @db.VarChar(255)
-  birthday                             DateTime                               @db.Date
+  birth_date                           DateTime                               @db.Date
   gender                               String                                 @db.VarChar(255)
   want_notification                    Boolean                                @default(true)
+  card_number                          String                                 @unique(map: "users_card_number_unique") @db.VarChar(255)
   created_at                           DateTime?                              @db.Timestamp(0)
   updated_at                           DateTime?                              @db.Timestamp(0)
   deleted_at                           DateTime?                              @db.Timestamp(0)
-  city_id                              BigInt
   assigned_coupons                     assigned_coupons[]
   carts                                carts[]
   orders                               orders[]
@@ -1146,9 +1148,9 @@ model users {
   user_favorite_stores                 user_favorite_stores[]
   user_interested_categories           user_interested_categories[]
   user_notifications                   user_notifications[]
-  cities                               cities                                 @relation(fields: [city_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_city_id_foreign")
+  cities                               cities                                 @relation(fields: [city_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "users_city_id_foreign")
 
-  @@unique([phone, bonus_card_no, ref_code, deleted_at], map: "users_phone_bonus_card_no_ref_code_deleted_at_unique")
+  @@unique([phone, card_number, ref_code, deleted_at], map: "users_phone_card_number_ref_code_deleted_at_unique")
 }
 
 model zone_pricing {
@@ -1232,4 +1234,37 @@ model store_detail_contents_and_store_products {
   updated_at            DateTime?             @db.Timestamp(0)
   store_detail_contents store_detail_contents @relation(fields: [content_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_detail_contents_and_store_products_content_id_foreign")
   store_products        store_products        @relation(fields: [product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_detail_contents_and_store_products_product_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model bonus_cards {
+  id          BigInt    @id @default(autoincrement())
+  card_number String    @unique(map: "bonus_cards_card_number_unique") @db.VarChar(255)
+  total       Decimal   @default(0) @db.Decimal(8, 2)
+  bonus       Decimal   @default(0) @db.Decimal(8, 2)
+  status      String    @default("active") @db.VarChar(255)
+  type        String    @default("digital") @db.VarChar(255)
+  block_type  String    @default("not_blocked") @db.VarChar(255)
+  deleted_at  DateTime? @db.Timestamp(0)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+}
+
+model colors {
+  id                     BigInt                   @id @default(autoincrement())
+  hex_code               String                   @unique(map: "colors_hex_code_unique") @db.VarChar(7)
+  deleted_at             DateTime?                @db.Timestamp(0)
+  store_product_variants store_product_variants[]
+}
+
+model language_lines {
+  id         BigInt    @id @default(autoincrement())
+  group      String    @db.VarChar(255)
+  key        String    @db.VarChar(255)
+  text       Json      @db.Json
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+
+  @@unique([group, key], map: "language_lines_group_key_unique")
+  @@index([group], map: "language_lines_group_index")
 }

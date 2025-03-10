@@ -1,3 +1,4 @@
+import { ApiResponse } from '@/utils/apiResponse';
 import { Request, Response } from 'express';
 // import { ApiResponse } from '@/utils/apiResponse';
 
@@ -13,5 +14,7 @@ export const getBannersController = async (_: Request, res: Response) => {
         ],
     }
 
-    res.json(data);
+    const response = ApiResponse.success(data);
+
+    res.json(response);
 }
