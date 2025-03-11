@@ -27,7 +27,7 @@ export const sendSMS = async (params: SendSMSParamsType) => {
 
     const result = await (await fetch(url)).json() as any;
 
-    logger.info(`${login}, ${password}, ${msisdn}, ${text}, ${sender}, ${key}`);
+    logger.info(`${login}, ${password}, ${msisdn}, ${text}, ${sender}, ${key}, ${JSON.stringify(result, null, 4)}`);
 
     if (result?.errorCode) {
         throw new BadRequestException();
