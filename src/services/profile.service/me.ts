@@ -16,6 +16,11 @@ export const getMe = async ({
             select: {
                 id: true,
                 name: true,
+                card_number: true,
+                birth_date: true,
+                ref_code: true,
+                gender: true,
+                phone: true,
                 user_address: {
                     select: {
                         id: true,

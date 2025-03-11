@@ -5,6 +5,9 @@ interface CompleteRegistrationParamsType {
     user_id: number;
     fullName: string;
     email: string;
+    gender: 'male' | 'female';
+    birth_date: Date;
+    city_id: number;
 }
 
 export const completeRegistration = async (params: CompleteRegistrationParamsType) => {
@@ -20,6 +23,12 @@ export const completeRegistration = async (params: CompleteRegistrationParamsTyp
         },
         data: {
             name: params.fullName,
+            gender: params.gender,
+            birth_date: params.birth_date,
+            city_id: params.city_id
+        },
+        select: {
+            id: true
         }
     });
 }

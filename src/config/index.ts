@@ -19,4 +19,9 @@ export default {
         methods: ['GET', 'POST'],
         credentials: true
     },
+    sms: {
+        login: process.env.SMS_LOGIN || '',
+        password: process.env.SMS_PASSWORD || '',
+        sender: process.env.SMS_SENDER || ''
+    }
 };
