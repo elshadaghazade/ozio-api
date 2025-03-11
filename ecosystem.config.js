@@ -2,8 +2,8 @@ module.exports = {
     apps: [
         {
             name: "ozio-backend",
-            script: "npm",
-            args: "start",
+            script: "node",
+            args: "dist/server.js",
             instances: "3",
             exec_mode: "cluster",
             watch: false,
@@ -14,6 +14,10 @@ module.exports = {
             combine_logs: true,
             max_size: "100M",
             autorestart: true,
+            env: {
+                NODE_ENV: "production",
+                DOTENV_CONFIG_PATH: ".env"
+            }
         },
     ],
 };
