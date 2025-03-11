@@ -1,4 +1,9 @@
 
+import dotenv from 'dotenv';
+
+if (process.env.DOTENV_CONFIG_PATH) {
+    dotenv.config();
+}
 
 export default {
     env: process.env.NODE_ENV || "development",

@@ -5,13 +5,6 @@ import routesV1 from "@/routes/v1";
 import logger from "@/config/logger";
 import app from '@/app';
 import { errorHandler } from "@/middleware/errorHandler";
-import dotenv from 'dotenv';
-
-if (process.env.DOTENV_CONFIG_PATH) {
-    dotenv.config({
-        path: process.env.DOTENV_CONFIG_PATH
-    });
-}
 
 (BigInt.prototype as any).toJSON = function () {
     return Number(this);
