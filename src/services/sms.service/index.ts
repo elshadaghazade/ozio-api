@@ -1,4 +1,5 @@
 import config from '@/config';
+import { BadRequestException } from '@/exceptions/BadRequestException';
 import { createHash } from 'crypto';
 
 interface SendSMSParamsType {
@@ -14,7 +15,7 @@ export const sendSMS = async (params: SendSMSParamsType) => {
 
     const password = config.sms.password;
     const login = config.sms.login;
-    const msisdn = params.msisdn;
+    const msisdn = params.msisdn.replace(/\D+/gi, '');
     const text = params.text;
     const sender = config.sms.sender;
 
@@ -23,7 +24,11 @@ export const sendSMS = async (params: SendSMSParamsType) => {
 
     const url = `https://apps.lsim.az/quicksms/v1/send?login=${login}&msisdn=${msisdn}&text=${text}&sender=${sender}&key=${key}&unicode=false`;
 
-    const result = await (await fetch(url)).json();
+    const result = await (await fetch(url)).json() as any;
+
+    if (result?.errorCode) {
+        throw new BadRequestException();
+    }
 
     return result;
 

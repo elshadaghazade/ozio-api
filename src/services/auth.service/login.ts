@@ -11,7 +11,9 @@ import { Prisma } from "@prisma/client";
 export const login = async ({
     phone,
 }: Partial<Prisma.usersCreateInput>) => {
-    const pattern = /^\+994\d+$/g;
+    const pattern = /^\+?\d+$/gi;
+    phone = phone?.replace(/[^\d\+]+/gi, '');
+
     if (!phone || !pattern.test(phone)) {
         throw new BadRequestException('Phone number is wrong');
     }
