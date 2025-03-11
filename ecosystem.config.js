@@ -2,9 +2,8 @@ module.exports = {
     apps: [
         {
             name: "ozio-backend",
-            script: "node",
-            args: "dist/server.js",
-            instances: "3",
+            script: "dist/server.js",
+            instances: "max",
             exec_mode: "cluster",
             watch: false,
             max_memory_restart: "500M",
