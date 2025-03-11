@@ -181,14 +181,26 @@ router.get('/:addressId', jwtAuthMiddleware, getAddressController);
  *                 type: string
  *                 example: "+1234567890"
  *               lng:
- *                 type: number
- *                 example: -73.935242
+ *                 type: string
+ *                 example: "-73.935242"
  *               lat:
- *                 type: number
- *                 example: 40.730610
+ *                 type: string
+ *                 example: "40.730610"
  *               person_name:
  *                 type: string
  *                 example: "John Doe"
+ *               floor:
+ *                 type: string
+ *                 nullable: true
+ *                 example: "3rd Floor"
+ *               road:
+ *                 type: string
+ *                 nullable: true
+ *                 example: "5th Avenue"
+ *               house:
+ *                 type: string
+ *                 nullable: true
+ *                 example: "10B"
  *     responses:
  *       201:
  *         description: Address created successfully
@@ -227,7 +239,7 @@ router.get('/:addressId', jwtAuthMiddleware, getAddressController);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- */
+ */ 
 router.post('/', jwtAuthMiddleware, createAddressController);
 
 /**
@@ -329,26 +341,26 @@ router.put('/set_as_default', jwtAuthMiddleware, setAsDefaultAddressController);
  *                 type: string
  *                 example: "+1234567890"
  *               lng:
- *                 type: number
- *                 example: -73.935242
+ *                 type: string
+ *                 example: "-73.935242"
  *               lat:
- *                 type: number
- *                 example: 40.730610
+ *                 type: string
+ *                 example: "40.730610"
  *               person_name:
  *                 type: string
  *                 example: "John Doe"
  *               floor:
  *                 type: string
+ *                 nullable: true
  *                 example: "3rd Floor"
  *               road:
  *                 type: string
+ *                 nullable: true
  *                 example: "5th Avenue"
  *               house:
  *                 type: string
+ *                 nullable: true
  *                 example: "10B"
- *               is_selected:
- *                 type: boolean
- *                 example: true
  *     responses:
  *       200:
  *         description: Address updated successfully
@@ -376,25 +388,29 @@ router.put('/set_as_default', jwtAuthMiddleware, setAsDefaultAddressController);
  *                       type: string
  *                       example: "+1234567890"
  *                     lng:
- *                       type: number
- *                       example: -73.935242
+ *                       type: string
+ *                       example: "-73.935242"
  *                     lat:
- *                       type: number
- *                       example: 40.730610
+ *                       type: string
+ *                       example: "40.730610"
  *                     person_name:
  *                       type: string
  *                       example: "John Doe"
  *                     floor:
  *                       type: string
+ *                       nullable: true
  *                       example: "3rd Floor"
  *                     road:
  *                       type: string
+ *                       nullable: true
  *                       example: "5th Avenue"
  *                     house:
  *                       type: string
+ *                       nullable: true
  *                       example: "10B"
  *                     is_selected:
  *                       type: boolean
+ *                       nullable: true
  *                       example: true
  *                     zones:
  *                       type: array

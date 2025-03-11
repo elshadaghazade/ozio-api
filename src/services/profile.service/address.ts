@@ -11,12 +11,11 @@ interface GetAddressParamsType {
     addressId: number | string;
 }
 
-type CreateAddressParamsType = Partial<Prisma.user_addressCreateInput> & {
+type CreateAddressParamsType = Partial<Omit<Prisma.user_addressCreateInput, 'id' | 'created_at' | 'updated_at' | 'deleted_at' | 'orders' | 'users' | 'zones' | 'is_selected'>> & {
     user_id: number;
 };
 
-type UpdateAddressParamsType = Partial<Prisma.user_addressUpdateInput> & {
-    user_id: number;
+interface UpdateAddressParamsType extends CreateAddressParamsType {
     addressId: string | number;
 }
 
@@ -117,6 +116,9 @@ export const createAddress = async (params: CreateAddressParamsType) => {
         lng: params.lng?.toString() || "",
         lat: params.lat?.toString() || "",
         person_name: params.person_name || "",
+        floor: params.floor,
+        road: params.road,
+        house: params.house,
         users: {
             connect: {
                 id: params.user_id
@@ -133,17 +135,43 @@ export const createAddress = async (params: CreateAddressParamsType) => {
 }
 
 export const updateAddress = async (params: UpdateAddressParamsType) => {
-    const createData: Prisma.user_addressUpdateInput = {
-        type: params.type || "",
-        phone: params.phone || "",
-        lng: params.lng?.toString() || "",
-        lat: params.lat?.toString() || "",
-        person_name: params.person_name || "",
-    };
+    const data: Prisma.user_addressUpdateInput = {};
+
+    if (params.type) {
+        data.type = params.type;
+    }
+
+    if (params.floor) {
+        data.floor = params.floor;
+    }
+
+    if (params.house) {
+        data.house = params.house;
+    }
+
+    if (params.lat) {
+        data.lat = params.lat;
+    }
+
+    if (params.lng) {
+        data.lng = params.lng;
+    }
+
+    if (params.person_name) {
+        data.person_name = params.person_name;
+    }
+
+    if (params.phone) {
+        data.phone = params.phone;
+    }
+
+    if (params.road) {
+        data.road = params.road;
+    }
     
     try {
         const address = await prisma.user_address.update({
-            data: createData,
+            data,
             where: {
                 id: Number(params.addressId),
                 user_id: params.user_id,
