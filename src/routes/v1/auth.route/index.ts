@@ -71,9 +71,9 @@ router.post('/otp_verify', otpController);
 /**
  * @swagger
  * /api/v1/auth/complete_registration:
- *   post:
+ *   put:
  *     summary: Complete user registration
- *     description: Completes the registration process by updating the user's full name and email.
+ *     description: Completes the registration process by updating the user's full name, email, and optional details.
  *     tags: [Auth]
  *     security:
  *       - BearerAuth: []  # Requires JWT Authentication
@@ -93,6 +93,21 @@ router.post('/otp_verify', otpController);
  *               email:
  *                 type: string
  *                 example: "johndoe@example.com"
+ *               gender:
+ *                 type: string
+ *                 enum: ["male", "female"]
+ *                 example: "male"
+ *               birth_date:
+ *                 type: string
+ *                 format: date
+ *                 example: "1990-05-15"
+ *               city_id:
+ *                 type: integer
+ *                 example: 1
+ *               ref_code:
+ *                 type: string
+ *                 nullable: truee
+ *                 example: null
  *     responses:
  *       200:
  *         description: Registration completed successfully
@@ -119,7 +134,7 @@ router.post('/otp_verify', otpController);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/complete_registration', jwtAuthMiddleware, registrationComplete);
+router.put('/complete_registration', jwtAuthMiddleware, registrationComplete);
 
 /**
  * @swagger

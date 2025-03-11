@@ -1,19 +1,18 @@
 import { UnauthorizedException } from "@/exceptions/UnauthorizedException";
-import { completeRegistration } from "@/services/auth.service/register";
+import { completeRegistration, CompleteRegistrationParamsType } from "@/services/auth.service/register";
 import { ApiResponse } from "@/utils/apiResponse";
 import { NextFunction, Request, Response } from "express";
 
-interface RegistrationCompleteBodyType {
-    fullName: string;
-    email: string;
-}
-
-export const registrationComplete = async (req: Request<{}, null, RegistrationCompleteBodyType>, res: Response, next: NextFunction) => {
+export const registrationComplete = async (req: Request<{}, null, CompleteRegistrationParamsType>, res: Response, next: NextFunction) => {
     
     try {
         const {
             fullName,
-            email
+            email,
+            gender,
+            birth_date,
+            city_id,
+            ref_code
         } = req.body;
 
         const user: any = (req as any).user;
@@ -25,7 +24,11 @@ export const registrationComplete = async (req: Request<{}, null, RegistrationCo
         await completeRegistration({
             user_id: user.id,
             fullName,
-            email
+            email,
+            gender,
+            birth_date: typeof birth_date === 'string' ? new Date(birth_date) : birth_date,
+            city_id,
+            ref_code
         });
 
         res.json(ApiResponse.success('Done'));
