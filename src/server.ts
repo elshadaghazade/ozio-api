@@ -6,6 +6,10 @@ import logger from "@/config/logger";
 import app from '@/app';
 import { errorHandler } from "@/middleware/errorHandler";
 
+(BigInt.prototype as any).toJSON = function () {
+    return Number(this);
+};
+
 const server = createServer(app);
 
 app.use(express.json());

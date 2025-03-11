@@ -68,10 +68,7 @@ export const getAddresses = async ({
         ]
     });
 
-    return addresses.map(address => ({
-        ...address,
-        id: Number(address.id)
-    }));
+    return addresses;
 }
 
 export const getAddress = async ({
@@ -107,10 +104,7 @@ export const getAddress = async ({
             }
         });
 
-        return {
-            ...address,
-            id: Number(address.id)
-        };
+        return address;
     } catch {
         throw new NotFoundException('address');
     }
@@ -177,10 +171,7 @@ export const updateAddress = async (params: UpdateAddressParamsType) => {
             }
         });
 
-        return {
-            ...address,
-            id: Number(address.id)
-        }
+        return address;
     } catch {
         throw new NotFoundException('address');
     }

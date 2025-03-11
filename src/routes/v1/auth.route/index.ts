@@ -1,4 +1,5 @@
 import { loginController, otpController } from '@/controllers/v1/auth/login.controller';
+import { refreshTokenController } from '@/controllers/v1/auth/refresh.controller';
 import { registrationComplete } from '@/controllers/v1/auth/registration.controller/complete';
 import { jwtAuthMiddleware } from '@/middleware/authHandler';
 import { getGlobalRateLimit } from '@/middleware/rateLimitHandler';
@@ -119,5 +120,72 @@ router.post('/otp_verify', otpController);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/complete_registration', jwtAuthMiddleware, registrationComplete);
+
+/**
+ * @swagger
+ * /api/v1/auth/refresh:
+ *   post:
+ *     summary: Refresh JWT tokens
+ *     description: Generates a new access token and refresh token using a valid refresh token.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 description: The refresh token used to generate new tokens.
+ *     responses:
+ *       200:
+ *         description: Successfully generated new tokens
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "OK"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     accessToken:
+ *                       type: string
+ *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                     refreshToken:
+ *                       type: string
+ *                       example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                     user_id:
+ *                       type: integer
+ *                       example: 1
+ *       400:
+ *         description: Invalid or missing refresh token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: Unauthorized (Invalid refresh token)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.post('/refresh', refreshTokenController);
 
 export default router;

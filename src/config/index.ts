@@ -3,10 +3,12 @@
 export default {
     env: process.env.NODE_ENV || "development",
     port: process.env.NODE_ENV === 'development' ? (process.env.PORT || 3000) : '',
-    host: process.env.NODE_ENV === 'development' ? 'localhost' : 'staging.ozio.az',
+    host: process.env.NODE_ENV === 'development' ? 'http://localhost' : 'https://staging.ozio.az',
     jwt: {
-        secret: process.env.JWT_SECRET || "your_secret_key",
-        expiresIn: process.env.JWT_EXPIRES_IN || "1d",
+        accessSecret: process.env.JWT_SECRET || "abcd",
+        refreshSecret: process.env.REFRESH_TOKEN_SECRET || 'efgh',
+        accessTokenExpiresIn: process.env.JWT_EXPIRES_IN || "15m",
+        refreshTokenExpiresIn: process.env.REFRESH_EXPIRES_IN || '30d'
     },
     redis: {
         host: process.env.REDIS_HOST || "127.0.0.1",

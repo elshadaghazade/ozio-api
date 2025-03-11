@@ -1,16 +1,13 @@
+import config from "@/config";
 import prisma from "@/config/db";
 import { NotFoundException } from "@/exceptions/NotFoundException";
+import { UnauthorizedException } from "@/exceptions/UnauthorizedException";
 import jwt from "jsonwebtoken";
 
-
-
-const JWT_SECRET = process.env.JWT_SECRET || "abc";
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || "abc";
-const ACCESS_TOKEN_EXPIRATION_TIME = process.env.ACCESS_TOKEN_EXPIRATION_TIME || "15m";
-const REFRESH_TOKEN_EXPIRATION_TIME = process.env.REFRESH_TOKEN_EXPIRATION_TIME
-    ? parseInt(process.env.REFRESH_TOKEN_EXPIRATION_TIME)
-    : 3600;
-
+const JWT_SECRET = config.jwt.accessSecret;
+const REFRESH_TOKEN_SECRET = config.jwt.refreshSecret;
+const ACCESS_TOKEN_EXPIRATION_TIME = config.jwt.accessTokenExpiresIn;
+const REFRESH_TOKEN_EXPIRATION_TIME = config.jwt.refreshTokenExpiresIn;
 
 export const getJwtToken = async (userId: number) => {
     try {
@@ -48,7 +45,7 @@ export const generateAccessToken = (id: number) => {
 
 export const generateRefreshToken = (id: number) => {
     const refreshToken = jwt.sign({ id }, REFRESH_TOKEN_SECRET, {
-        expiresIn: Math.round(Date.now() / 1000) + REFRESH_TOKEN_EXPIRATION_TIME,
+        expiresIn: REFRESH_TOKEN_EXPIRATION_TIME as any,
     });
 
     return refreshToken;
@@ -65,5 +62,17 @@ export const generateTokens = (id: number) => {
 }
 
 export const verify = (token: string) => {
-    return jwt.verify(token, JWT_SECRET);
+    try {
+        return jwt.verify(token, JWT_SECRET);
+    } catch {
+        throw new UnauthorizedException();
+    }
+}
+
+export const verifyRefreshToken = (token: string) => {
+    try {
+        return jwt.verify(token, REFRESH_TOKEN_SECRET);
+    } catch {
+        throw new UnauthorizedException();
+    }
 }

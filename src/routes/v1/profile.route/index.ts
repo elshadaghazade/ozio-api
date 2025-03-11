@@ -1,8 +1,10 @@
 import express from 'express';
-import addressRoute from './address.route';
+import addressRoutes from './address.route';
+import meRoutes from './me.route';
 
 const router = express.Router();
 
-router.use('/address', addressRoute);
+router.use('/address', addressRoutes);
+router.use('/me', meRoutes);
 
 export default router;
