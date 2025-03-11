@@ -128,6 +128,8 @@ export const getStore = async (params: GetStoreParamsType) => {
             }
         });
 
+        console.log(storeCategoryTranslation);
+
         
     } catch {
         throw new NotFoundException('store');
