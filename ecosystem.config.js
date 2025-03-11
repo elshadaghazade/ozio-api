@@ -1,7 +1,7 @@
 module.exports = {
     apps: [
         {
-            name: "online-market-backend",
+            name: "ozio-backend",
             script: "npm",
             args: "start",
             instances: "3",
