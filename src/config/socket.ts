@@ -13,7 +13,13 @@ export async function initializeSocket(server: any) {
         },
     });
 
-    await Promise.all([pubClient.connect(), subClient.connect()]);
+    if (!pubClient.isOpen) {
+        await pubClient.connect();
+    }
+
+    if (!subClient.isOpen) {
+        await subClient.connect();
+    }
 
     io.adapter(createAdapter(pubClient, subClient));
 
