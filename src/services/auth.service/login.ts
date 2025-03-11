@@ -126,5 +126,8 @@ export const login = async ({
         }
     }
 
-    return payload;
+    return {
+        payload,
+        otp_code: otp.code
+    };
 }

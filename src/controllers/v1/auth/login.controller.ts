@@ -10,16 +10,16 @@ export const loginController = async (req: Request<{}, null, Partial<Prisma.user
 
     try {
         
-        const loginData = await login(body);
+        const { payload, otp_code } = await login(body);
 
         await sendSMS({
-            text: `OTP kod: ${loginData.otp_code}`,
-            msisdn: loginData.phone
+            text: `OTP kod: ${otp_code}`,
+            msisdn: payload.phone
         });
 
         res.json(ApiResponse.success({
             success: 'OTP code was sent to your phone number',
-            loginData
+            payload
         }));
     } catch (err) {
         next(err);
