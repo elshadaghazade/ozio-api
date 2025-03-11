@@ -60,9 +60,24 @@ export const login = async ({
         registerRequired = true;
     }
 
+    let card_number: string = "";
+
+    while (true) {
+        card_number = generateBonusCardCode().toString();
+        try {
+            await prisma.users.findFirstOrThrow({
+                where: {
+                    card_number
+                }
+            });
+        } catch {
+            break;
+        }
+    }
+
     user = await prisma.users.update({
         data: {
-            card_number: generateBonusCardCode(user.id),
+            card_number,
             updated_at: new Date()
         },
         where: {

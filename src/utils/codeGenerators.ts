@@ -1,9 +1,9 @@
-export const generateBonusCardCode = (user_id: number | bigint) => {
-    const now = new Date();
-    return `${now.getFullYear()}${now.getMonth()}${now.getDate()}${now.getHours()}${now.getMinutes()}${now.getSeconds()}${user_id}`;
+export const generateBonusCardCode = () => {
+    const uniqueNumber = Number((BigInt("0x" + randomBytes(6).toString("hex")) % BigInt(9e10)).toString()) + 1e10;
+    return uniqueNumber;
 }
 
-import crypto from "crypto";
+import crypto, { randomBytes } from "crypto";
 
 /**
  * Generates a unique random fixed-length integer.
