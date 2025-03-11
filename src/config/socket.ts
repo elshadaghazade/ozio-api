@@ -1,7 +1,7 @@
 import { Server as SocketServer } from "socket.io";
 import { createAdapter } from "@socket.io/redis-adapter";
-import { createClient } from "redis";
 import config from ".";
+import { pubClient, subClient } from "./redis";
 
 export async function initializeSocket(server: any) {
     const io = new SocketServer(server, {
@@ -12,9 +12,6 @@ export async function initializeSocket(server: any) {
             credentials: config.socket.credentials
         },
     });
-
-    const pubClient = createClient({ url: `redis://${config.redis.host}:${config.redis.port}` });
-    const subClient = pubClient.duplicate();
 
     await Promise.all([pubClient.connect(), subClient.connect()]);
 
