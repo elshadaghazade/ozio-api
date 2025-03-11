@@ -27,6 +27,7 @@ export const login = async ({
             id: true,
             card_number: true,
             name: true,
+            phone: true,
         }
     });
 
@@ -46,6 +47,7 @@ export const login = async ({
                 id: true,
                 card_number: true,
                 name: true,
+                phone: true,
             }
         });
     }
@@ -70,7 +72,8 @@ export const login = async ({
         select: {
             id: true,
             card_number: true,
-            name: true
+            name: true,
+            phone: true,
         }
     });
 
@@ -86,10 +89,17 @@ export const login = async ({
         }
     });
 
-    let payload: any = {
+    let payload: {
+        registerRequired: boolean;
+        user_id: number;
+        card_number: string;
+        phone: string;
+        otp_code?: number
+    } = {
         registerRequired,
         user_id: Number(user.id),
         card_number: user.card_number,
+        phone: user.phone,
     }
 
     if (config.env === 'development') {
