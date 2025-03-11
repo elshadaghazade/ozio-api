@@ -36,6 +36,7 @@ router.post('/login',
     getGlobalRateLimit({
         windowMs: 60000,
         limit: 1,
+        message: 'Növbəti sms üçün 60 saniyə gözləməlisiniz',
         keyGenerator: req => {
             const { phone } = req.body;
             return phone;

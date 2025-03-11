@@ -14,8 +14,9 @@ interface GetStoreParamsType {
     locale: string;
 }
 
-const getStoreSelect = () => {
+const storeSelect = () => {
     const select: Prisma.storesSelect = {
+        id: true,
         name: true,
         store_code: true,
         phone: true,
@@ -47,16 +48,16 @@ const getStoreSelect = () => {
                 name: true,
             }
         },
-        countries: {
-            select: {
-                id: true,
-                name: true
-            }
-        },
         cities: {
             select: {
                 id: true,
-                name: true
+                name: true,
+                countries: {
+                    select: {
+                        id: true,
+                        name: true
+                    }
+                }
             }
         },
         zones: {
@@ -79,10 +80,11 @@ const getStoreSelect = () => {
 export const searchStores = async (params: SearchStoresParamsType) => {
     const where: Prisma.storesWhereInput = {
         status: 'active',
+        deleted_at: null
     };
 
-    const limit = params.limit || 10;
-    const offset = params.offset || 0;
+    const limit = params.limit && params.limit > 50 ? 50 : (params.limit && params.limit > 0 ? params.limit : 50);
+    const offset = params.offset && params.offset > 0 ? params.offset : 0;
 
     if (params.keyword?.trim()) {
         where.name = {
@@ -93,12 +95,19 @@ export const searchStores = async (params: SearchStoresParamsType) => {
 
     const stores = await prisma.stores.findMany({
         where,
-        select: getStoreSelect(),
+        select: storeSelect(),
         take: limit,
         skip: offset
     });
 
-    return stores;
+    const count = await prisma.stores.count({
+        where
+    });
+
+    return {
+        stores,
+        count
+    };
 }
 
 export const getStore = async (params: GetStoreParamsType) => {
@@ -106,10 +115,12 @@ export const getStore = async (params: GetStoreParamsType) => {
         
         const store = await prisma.stores.findUniqueOrThrow({
             where: {
-                id: params.store_id
+                id: params.store_id,
+                deleted_at: null,
+                status: 'active'
             },
             select: {
-                ...getStoreSelect(),
+                ...storeSelect(),
                 store_category_id: true
             }
         });
@@ -128,9 +139,11 @@ export const getStore = async (params: GetStoreParamsType) => {
             }
         });
 
-        console.log(storeCategoryTranslation);
+        return {
+            store,
+            category: storeCategoryTranslation
+        }
 
-        
     } catch {
         throw new NotFoundException('store');
     }
