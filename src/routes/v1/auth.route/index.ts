@@ -33,14 +33,14 @@ const router = express.Router();
  *         description: Internal server error
  */
 router.post('/login',
-    // getGlobalRateLimit({
-    //     windowMs: 60000,
-    //     limit: 1,
-    //     keyGenerator: req => {
-    //         const { phone } = req.body;
-    //         return phone;
-    //     }
-    // }),
+    getGlobalRateLimit({
+        windowMs: 60000,
+        limit: 1,
+        keyGenerator: req => {
+            const { phone } = req.body;
+            return phone;
+        }
+    }),
     loginController);
 
 /**
