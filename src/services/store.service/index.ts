@@ -2,11 +2,44 @@ import prisma from "@/config/db";
 import { NotFoundException } from "@/exceptions/NotFoundException";
 import { Prisma } from "@prisma/client";
 
+export type orderByTuple = 'name_asc' | 'name_desc' | 'country_name_asc' | 'country_name_desc' | 'city_name_asc' | 'city_name_desc' | 'rating_asc' | 'rating_desc';
+
+const orderByVariants: Record<orderByTuple, Prisma.storesOrderByWithRelationInput> = {
+    name_asc: {name: 'asc'},
+    name_desc: {name: 'desc'},
+    country_name_asc: {
+        cities: {
+            countries: {
+                name: 'asc'
+            }
+        }
+    },
+    country_name_desc: {
+        cities: {
+            countries: {
+                name: 'desc'
+            }
+        }
+    },
+    city_name_asc: {
+        cities: {
+            name: 'asc'
+        }
+    },
+    city_name_desc: {
+        cities: {
+            name: 'desc'
+        }
+    },
+    rating_asc: { rating: 'asc' },
+    rating_desc: { rating: 'desc' }
+}
+
 interface SearchStoresParamsType {
     keyword?: string;
-    locale: string;
     limit?: number;
     offset?: number;
+    orderBy?: orderByTuple | orderByTuple[]
 }
 
 interface GetStoreParamsType {
@@ -77,19 +110,40 @@ const storeSelect = () => {
     return select;
 }
 
-export const searchStores = async (params: SearchStoresParamsType) => {
+export const searchStores = async ({
+    keyword,
+    limit=50,
+    offset=0,
+    orderBy=['rating_desc', 'name_asc']
+}: SearchStoresParamsType) => {
     const where: Prisma.storesWhereInput = {
         status: 'active',
-        deleted_at: null
+        deleted_at: null,
+        
     };
 
-    const limit = params.limit && params.limit > 50 ? 50 : (params.limit && params.limit > 0 ? params.limit : 50);
-    const offset = params.offset && params.offset > 0 ? params.offset : 0;
+    limit = limit && limit > 50 ? 50 : (limit && limit > 0 ? limit : 50);
+    offset = offset && offset > 0 ? offset : 0;
 
-    if (params.keyword?.trim()) {
+    if (keyword?.trim()) {
         where.name = {
-            contains: params.keyword,
+            contains: keyword,
             mode: 'insensitive'
+        }
+    }
+
+    const storesOrderBy: Prisma.storesOrderByWithRelationInput[] = [];
+    if (typeof orderBy === 'string') {
+        if (orderByVariants[orderBy]) {
+            storesOrderBy.push(orderByVariants[orderBy]);
+        }
+    } else if (orderBy instanceof Array) {
+        for(let ord of orderBy) {
+            if (!orderByVariants[ord]) {
+                continue;
+            }
+            
+            storesOrderBy.push(orderByVariants[ord]);
         }
     }
 
@@ -97,7 +151,8 @@ export const searchStores = async (params: SearchStoresParamsType) => {
         where,
         select: storeSelect(),
         take: limit,
-        skip: offset
+        skip: offset,
+        orderBy: storesOrderBy
     });
 
     const count = await prisma.stores.count({

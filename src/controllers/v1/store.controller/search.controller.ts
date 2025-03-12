@@ -6,7 +6,6 @@ export const searchStoreController = async (req: Request, res: Response, next: N
     try {
         const {
             keyword,
-            locale,
             limit,
             offset
         } = req.query as {
@@ -17,7 +16,6 @@ export const searchStoreController = async (req: Request, res: Response, next: N
         };
 
         const { stores, count: total } = await searchStores({
-            locale,
             keyword,
             limit: limit?.length ? Number(limit) : undefined,
             offset: offset?.length ? Number(offset) : undefined
