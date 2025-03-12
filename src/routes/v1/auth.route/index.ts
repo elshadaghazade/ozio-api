@@ -33,8 +33,16 @@ const router = express.Router();
  *         description: Internal server error
  */
 router.post('/login',
+
+    // ip uchun 1 deqiqelik rate limit
     getGlobalRateLimit({
-        windowMs: 60000,
+        windowMs: 45000,
+        limit: 1,
+    }),
+
+    // telefon nomresi uchun 1 deqiqelik rate limit
+    getGlobalRateLimit({
+        windowMs: 45000,
         limit: 1,
         message: 'Növbəti sms üçün 60 saniyə gözləməlisiniz',
         keyGenerator: req => {
@@ -42,7 +50,9 @@ router.post('/login',
             return phone;
         }
     }),
-    loginController);
+
+    loginController
+);
 
 /**
  * @swagger
