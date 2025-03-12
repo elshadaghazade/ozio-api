@@ -1,5 +1,4 @@
 import prisma from "@/config/db";
-import logger from "@/config/logger";
 import { NotFoundException } from "@/exceptions/NotFoundException";
 import { Prisma } from "@prisma/client";
 
