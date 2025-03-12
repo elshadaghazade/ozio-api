@@ -29,6 +29,31 @@ type SetAsDefaultAddressParamsType = {
     addressId: string | number;
 }
 
+const addressSelect = () => {
+    const select: Prisma.user_addressSelect = {
+        id: true,
+        type: true,
+        phone: true,
+        lng: true,
+        lat: true,
+        person_name: true,
+        floor: true,
+        road: true,
+        house: true,
+        is_selected: true,
+        zones: {
+            select: {
+                id: true,
+                name: true,
+                type: true,
+                status: true,
+            }
+        }
+    };
+
+    return select;
+}
+
 export const getAddresses = async ({
     user_id
 }: GetAddressesParamsType) => {
@@ -37,26 +62,7 @@ export const getAddresses = async ({
             user_id,
             deleted_at: null
         },
-        select: {
-            id: true,
-            type: true,
-            phone: true,
-            lng: true,
-            lat: true,
-            person_name: true,
-            floor: true,
-            road: true,
-            house: true,
-            is_selected: true,
-            zones: {
-                select: {
-                    id: true,
-                    name: true,
-                    type: true,
-                    status: true,
-                }
-            }
-        },
+        select: addressSelect(),
         orderBy: [
             {
                 is_selected: 'desc',
@@ -81,26 +87,7 @@ export const getAddress = async ({
                 user_id,
                 deleted_at: null
             },
-            select: {
-                id: true,
-                type: true,
-                phone: true,
-                lng: true,
-                lat: true,
-                person_name: true,
-                floor: true,
-                road: true,
-                house: true,
-                is_selected: true,
-                zones: {
-                    select: {
-                        id: true,
-                        name: true,
-                        type: true,
-                        status: true,
-                    }
-                }
-            }
+            select: addressSelect()
         });
 
         return address;
