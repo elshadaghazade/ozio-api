@@ -62,13 +62,6 @@ const storeSelect = () => {
         has_packet: true,
         open_time: true,
         close_time: true,
-        store_detail_contents: {
-            select: {
-                display_name: true,
-                type: true,
-                category_more_btn: true,
-            }
-        },
         currencies: {
             select: {
                 id: true,
