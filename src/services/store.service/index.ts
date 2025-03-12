@@ -148,14 +148,6 @@ export const searchStores = async ({
         }
     }
 
-    logger.info(JSON.stringify({
-        where,
-        select: storeSelect(),
-        take: limit,
-        skip: offset,
-        orderBy: storesOrderBy
-    }, null, 4));
-
     const stores = await prisma.stores.findMany({
         where,
         select: storeSelect(),
