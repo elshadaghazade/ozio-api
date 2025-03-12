@@ -1,4 +1,5 @@
 import prisma from "@/config/db";
+import logger from "@/config/logger";
 import { NotFoundException } from "@/exceptions/NotFoundException";
 import { Prisma } from "@prisma/client";
 
@@ -142,10 +143,18 @@ export const searchStores = async ({
             if (!orderByVariants[ord]) {
                 continue;
             }
-            
+
             storesOrderBy.push(orderByVariants[ord]);
         }
     }
+
+    logger.info(JSON.stringify({
+        where,
+        select: storeSelect(),
+        take: limit,
+        skip: offset,
+        orderBy: storesOrderBy
+    }, null, 4));
 
     const stores = await prisma.stores.findMany({
         where,
