@@ -74,22 +74,22 @@ const storeSelect = () => {
                 name: true,
             }
         },
-        cities: {
-            select: {
-                id: true,
-                name: true,
-                countries: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                }
-            }
-        },
         zones: {
             select: {
                 id: true,
                 name: true,
+                cities: {
+                    select: {
+                        id: true,
+                        name: true,
+                        countries: {
+                            select: {
+                                id: true,
+                                name: true
+                            }
+                        }
+                    }
+                }
             }
         },
         store_branches: {

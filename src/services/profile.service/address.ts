@@ -47,6 +47,18 @@ const addressSelect = () => {
                 name: true,
                 type: true,
                 status: true,
+                cities: {
+                    select: {
+                        id: true,
+                        name: true,
+                        countries: {
+                            select: {
+                                id: true,
+                                name: true
+                            }
+                        }
+                    }
+                }
             }
         }
     };
