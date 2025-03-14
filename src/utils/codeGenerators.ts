@@ -3,6 +3,7 @@ export const generateBonusCardCode = () => {
     return uniqueNumber;
 }
 
+import config from "@/config";
 import crypto, { randomBytes } from "crypto";
 
 /**
@@ -11,6 +12,11 @@ import crypto, { randomBytes } from "crypto";
  * @returns A random integer of the specified length
  */
 export function generateRandomFixedLengthInteger(length: number): number {
+    
+    if (config.env === 'development') {
+        return 123456;
+    }
+
     if (length < 1 || length > 18) {
         throw new Error("Length must be between 1 and 18 to stay within Number.MAX_SAFE_INTEGER.");
     }

@@ -21,7 +21,7 @@ export const getMe = async ({
                 ref_code: true,
                 gender: true,
                 phone: true,
-                user_address: {
+                user_addresses: {
                     select: {
                         id: true,
                         floor: true,

@@ -153,6 +153,7 @@ model cities {
   countries  countries @relation(fields: [country_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cities_country_id_foreign")
   stores     stores[]
   users      users[]
+  zones      zones[]
 }
 
 model countries {
@@ -217,11 +218,9 @@ model courier_vehicles {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model couriers {
   id                     BigInt                   @id @default(autoincrement())
-  name                   String                   @db.VarChar(255)
+  name                   String                   @unique(map: "couriers_name_unique") @db.VarChar(255)
   phone                  String?                  @db.VarChar(255)
-  store_id               BigInt?
-  email                  String                   @db.VarChar(255)
-  password               String                   @db.VarChar(255)
+  store_id               BigInt
   total_earn             Decimal                  @default(0) @db.Decimal(8, 2)
   not_paid               Decimal                  @default(0) @db.Decimal(8, 2)
   paid                   Decimal                  @default(0) @db.Decimal(8, 2)
@@ -236,11 +235,11 @@ model couriers {
   updated_at             DateTime?                @db.Timestamp(0)
   deleted_at             DateTime?                @db.Timestamp(0)
   courier_ratings        courier_ratings[]
-  stores                 stores?                  @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "couriers_store_id_foreign")
+  stores                 stores                   @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "couriers_store_id_foreign")
   orders                 orders[]
   system_courier_ratings system_courier_ratings[]
 
-  @@unique([email, deleted_at], map: "couriers_email_deleted_at_unique")
+  @@unique([name, deleted_at], map: "couriers_name_deleted_at_unique")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -444,6 +443,7 @@ model orders {
   tip                   Decimal           @default(0) @db.Decimal(10, 2)
   notes                 String?
   pay_reference         String?           @db.VarChar(255)
+  other_pay_reference   String?           @db.VarChar(255)
   payment_method        String            @default("cash") @db.VarChar(255)
   mrp                   Decimal           @db.Decimal(10, 2)
   price                 Decimal           @db.Decimal(10, 2)
@@ -459,7 +459,7 @@ model orders {
   modules               modules           @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "orders_module_id_foreign")
   stores                stores            @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "orders_store_id_foreign")
   coupons               coupons?          @relation(fields: [used_coupon_id], references: [id], onUpdate: NoAction, map: "orders_used_coupon_id_foreign")
-  user_address          user_address?     @relation(fields: [user_address_id], references: [id], onUpdate: NoAction, map: "orders_user_address_id_foreign")
+  user_address          user_addresses?   @relation(fields: [user_address_id], references: [id], onUpdate: NoAction, map: "orders_user_address_id_foreign")
   users                 users?            @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "orders_user_id_foreign")
   store_ratings         store_ratings[]
 }
@@ -703,9 +703,9 @@ model store_product_variant_assignments {
   stock                                                 Decimal                                                 @default(0) @db.Decimal(8, 2)
   price                                                 Decimal                                                 @default(0) @db.Decimal(8, 2)
   mrp                                                   Decimal                                                 @default(0) @db.Decimal(8, 2)
+  visibility                                            String                                                  @default("visible") @db.VarChar(255)
   min_order_quantity                                    Decimal?                                                @db.Decimal(8, 2)
   max_order_quantity                                    Decimal?                                                @db.Decimal(8, 2)
-  assign_all_stores                                     Boolean
   created_at                                            DateTime?                                               @db.Timestamp(0)
   updated_at                                            DateTime?                                               @db.Timestamp(0)
   deleted_at                                            DateTime?                                               @db.Timestamp(0)
@@ -868,6 +868,7 @@ model stores {
   have_vegan                        Boolean
   have_not_vegan                    Boolean
   has_packet                        Boolean
+  preparation_time                  Int
   open_time                         DateTime                            @db.Time(0)
   close_time                        DateTime                            @db.Time(0)
   zone_id                           BigInt?
@@ -1045,27 +1046,6 @@ model used_coupons {
   users              users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "used_coupons_user_id_foreign")
 }
 
-model user_address {
-  id          BigInt    @id @default(autoincrement())
-  type        String    @db.VarChar(255)
-  phone       String    @db.VarChar(255)
-  lng         String    @db.VarChar(255)
-  lat         String    @db.VarChar(255)
-  user_id     BigInt
-  person_name String    @db.VarChar(255)
-  floor       String?   @db.VarChar(255)
-  road        String?   @db.VarChar(255)
-  house       String?   @db.VarChar(255)
-  is_selected Boolean   @default(false)
-  zone_id     BigInt?
-  created_at  DateTime? @db.Timestamp(0)
-  updated_at  DateTime? @db.Timestamp(0)
-  deleted_at  DateTime? @db.Timestamp(0)
-  orders      orders[]
-  users       users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_address_user_id_foreign")
-  zones       zones?    @relation(fields: [zone_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_address_zone_id_foreign")
-}
-
 model user_devices {
   id           BigInt    @id @default(autoincrement())
   user_id      BigInt
@@ -1142,7 +1122,7 @@ model users {
   otps                                 otps[]
   store_product_variant_ratings        store_product_variant_ratings[]
   used_coupons                         used_coupons[]
-  user_address                         user_address[]
+  user_addresses                       user_addresses[]
   user_devices                         user_devices[]
   user_favorite_store_product_variants user_favorite_store_product_variants[]
   user_favorite_stores                 user_favorite_stores[]
@@ -1172,14 +1152,16 @@ model zones {
   type                       String                       @db.VarChar(255)
   coordinates                Unsupported("geometry")
   status                     String                       @default("active") @db.VarChar(255)
+  city_id                    BigInt
   created_at                 DateTime?                    @db.Timestamp(0)
   updated_at                 DateTime?                    @db.Timestamp(0)
   deleted_at                 DateTime?                    @db.Timestamp(0)
   modules_zones              modules_zones[]
   order_based_campaign_zones order_based_campaign_zones[]
   stores                     stores[]
-  user_address               user_address[]
+  user_addresses             user_addresses[]
   zone_pricing               zone_pricing[]
+  cities                     cities                       @relation(fields: [city_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "zones_city_id_foreign")
 }
 
 model courier_mission_stores {
@@ -1242,7 +1224,6 @@ model bonus_cards {
   card_number String    @unique(map: "bonus_cards_card_number_unique") @db.VarChar(255)
   total       Decimal   @default(0) @db.Decimal(8, 2)
   bonus       Decimal   @default(0) @db.Decimal(8, 2)
-  status      String    @default("active") @db.VarChar(255)
   type        String    @default("digital") @db.VarChar(255)
   block_type  String    @default("not_blocked") @db.VarChar(255)
   deleted_at  DateTime? @db.Timestamp(0)
@@ -1267,4 +1248,95 @@ model language_lines {
 
   @@unique([group, key], map: "language_lines_group_key_unique")
   @@index([group], map: "language_lines_group_index")
+}
+
+model card_bonus_percentages {
+  id          BigInt    @id @default(autoincrement())
+  card_number String    @db.VarChar(255)
+  percentage  Decimal   @default(0) @db.Decimal(8, 2)
+  start_date  DateTime  @db.Timestamp(0)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model courier_bonus_cards {
+  id          BigInt    @id @default(autoincrement())
+  card_number String    @unique(map: "courier_bonus_cards_card_number_unique") @db.VarChar(255)
+  total       Decimal   @default(0) @db.Decimal(8, 2)
+  bonus       Decimal   @default(0) @db.Decimal(8, 2)
+  type        String    @default("digital") @db.VarChar(255)
+  block_type  String    @default("not_blocked") @db.VarChar(255)
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+}
+
+model store_bonus_percentages {
+  id         BigInt    @id @default(autoincrement())
+  store_code String    @db.VarChar(255)
+  percentage Decimal   @default(0) @db.Decimal(8, 2)
+  start_date DateTime  @db.Timestamp(0)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model store_product_variant_bonus_percentages {
+  id           BigInt    @id @default(autoincrement())
+  store_code   String    @db.VarChar(255)
+  barcode      String    @db.VarChar(255)
+  percentage   Decimal   @default(0) @db.Decimal(8, 2)
+  for_online   String    @default("active") @db.VarChar(255)
+  for_physical String    @default("active") @db.VarChar(255)
+  quantity     Decimal   @db.Decimal(8, 2)
+  start_date   DateTime  @db.Date
+  end_date     DateTime  @db.Date
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+}
+
+model store_service_translations {
+  id               BigInt         @id @default(autoincrement())
+  store_service_id BigInt
+  locale           String         @db.VarChar(255)
+  name             String         @db.VarChar(255)
+  description      String?        @db.VarChar(255)
+  created_at       DateTime?      @db.Timestamp(0)
+  updated_at       DateTime?      @db.Timestamp(0)
+  store_services   store_services @relation(fields: [store_service_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_service_translations_store_service_id_foreign")
+
+  @@index([locale], map: "store_service_translations_locale_index")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model store_services {
+  id                         BigInt                       @id @default(autoincrement())
+  status                     String                       @default("active") @db.VarChar(255)
+  percentage                 Decimal                      @default(0) @db.Decimal(8, 2)
+  created_at                 DateTime?                    @db.Timestamp(0)
+  updated_at                 DateTime?                    @db.Timestamp(0)
+  deleted_at                 DateTime?                    @db.Timestamp(0)
+  store_service_translations store_service_translations[]
+}
+
+model user_addresses {
+  id          BigInt    @id @default(autoincrement())
+  type        String    @db.VarChar(255)
+  phone       String    @db.VarChar(255)
+  lng         String    @db.VarChar(255)
+  lat         String    @db.VarChar(255)
+  user_id     BigInt
+  person_name String    @db.VarChar(255)
+  floor       String?   @db.VarChar(255)
+  road        String?   @db.VarChar(255)
+  house       String?   @db.VarChar(255)
+  is_selected Boolean   @default(false)
+  zone_id     BigInt?
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+  deleted_at  DateTime? @db.Timestamp(0)
+  orders      orders[]
+  users       users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_addresses_user_id_foreign")
+  zones       zones?    @relation(fields: [zone_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_addresses_zone_id_foreign")
 }

@@ -11,7 +11,7 @@ interface GetAddressParamsType {
     addressId: number | string;
 }
 
-type CreateAddressParamsType = Partial<Omit<Prisma.user_addressCreateInput, 'id' | 'created_at' | 'updated_at' | 'deleted_at' | 'orders' | 'users' | 'zones' | 'is_selected'>> & {
+type CreateAddressParamsType = Partial<Omit<Prisma.user_addressesCreateInput, 'id' | 'created_at' | 'updated_at' | 'deleted_at' | 'orders' | 'users' | 'zones' | 'is_selected'>> & {
     user_id: number;
 };
 
@@ -30,7 +30,7 @@ type SetAsDefaultAddressParamsType = {
 }
 
 const addressSelect = () => {
-    const select: Prisma.user_addressSelect = {
+    const select: Prisma.user_addressesSelect = {
         id: true,
         type: true,
         phone: true,
@@ -57,7 +57,7 @@ const addressSelect = () => {
 export const getAddresses = async ({
     user_id
 }: GetAddressesParamsType) => {
-    const addresses = await prisma.user_address.findMany({
+    const addresses = await prisma.user_addresses.findMany({
         where: {
             user_id,
             deleted_at: null
@@ -81,7 +81,7 @@ export const getAddress = async ({
     addressId
 }: GetAddressParamsType) => {
     try {
-        const address = await prisma.user_address.findUniqueOrThrow({
+        const address = await prisma.user_addresses.findUniqueOrThrow({
             where: {
                 id: Number(addressId),
                 user_id,
@@ -97,7 +97,7 @@ export const getAddress = async ({
 }
 
 export const createAddress = async (params: CreateAddressParamsType) => {
-    const createData: Prisma.user_addressCreateInput = {
+    const createData: Prisma.user_addressesCreateInput = {
         type: params.type || "",
         phone: params.phone || "",
         lng: params.lng?.toString() || "",
@@ -113,7 +113,7 @@ export const createAddress = async (params: CreateAddressParamsType) => {
         }
     };
     
-    await prisma.user_address.create({
+    await prisma.user_addresses.create({
         data: createData,
         select: {
             id: true
@@ -122,7 +122,7 @@ export const createAddress = async (params: CreateAddressParamsType) => {
 }
 
 export const updateAddress = async (params: UpdateAddressParamsType) => {
-    const data: Prisma.user_addressUpdateInput = {};
+    const data: Prisma.user_addressesUpdateInput = {};
 
     if (params.type) {
         data.type = params.type;
@@ -157,7 +157,7 @@ export const updateAddress = async (params: UpdateAddressParamsType) => {
     }
     
     try {
-        const address = await prisma.user_address.update({
+        const address = await prisma.user_addresses.update({
             data,
             where: {
                 id: Number(params.addressId),
@@ -194,7 +194,7 @@ export const updateAddress = async (params: UpdateAddressParamsType) => {
 
 export const deleteAddress = async (params: DeleteAddressParamstype) => {
     try {
-        await prisma.user_address.update({
+        await prisma.user_addresses.update({
             where: {
                 id: Number(params.addressId),
                 user_id: params.user_id,
@@ -215,7 +215,7 @@ export const deleteAddress = async (params: DeleteAddressParamstype) => {
 export const setAsDefaultAddress = async (params: SetAsDefaultAddressParamsType) => {
     try {
         await prisma.$transaction(async prisma => {
-            await prisma.user_address.updateMany({
+            await prisma.user_addresses.updateMany({
                 where: {
                     id: {
                         not: Number(params.addressId)
@@ -228,7 +228,7 @@ export const setAsDefaultAddress = async (params: SetAsDefaultAddressParamsType)
                 }
             });
     
-            await prisma.user_address.update({
+            await prisma.user_addresses.update({
                 where: {
                     id: Number(params.addressId),
                     user_id: params.user_id,
