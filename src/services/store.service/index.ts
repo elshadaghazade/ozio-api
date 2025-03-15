@@ -89,6 +89,25 @@ const storeSelect = () => {
                             }
                         }
                     }
+                },
+                zone_pricing: {
+                    select: {
+                        id: true,
+                        price_for_100m: true,
+                        currencies: {
+                            select: {
+                                id: true,
+                                code: true,
+                                name: true,
+                                tips: {
+                                    select: {
+                                        id: true,
+                                        value: true,
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         },

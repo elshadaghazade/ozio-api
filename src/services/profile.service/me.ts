@@ -33,7 +33,44 @@ export const getMe = async ({
                         phone: true,
                         road: true,
                         type: true,
-                        zones: true
+                        zones: {
+                            select: {
+                                id: true,
+                                name: true,
+                                type: true,
+                                cities: {
+                                    select: {
+                                        id: true,
+                                        name: true,
+                                        countries: {
+                                            select: {
+                                                id: true,
+                                                name: true
+                                            }
+                                        }
+                                    }
+                                },
+                                zone_pricing: {
+                                    select: {
+                                        id: true,
+                                        price_for_100m: true,
+                                        currencies: {
+                                            select: {
+                                                id: true,
+                                                code: true,
+                                                name: true,
+                                                tips: {
+                                                    select: {
+                                                        id: true,
+                                                        value: true,
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     where: {
                         deleted_at: null

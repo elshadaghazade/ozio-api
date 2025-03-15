@@ -13,6 +13,7 @@ interface GetAddressParamsType {
 
 type CreateAddressParamsType = Partial<Omit<Prisma.user_addressesCreateInput, 'id' | 'created_at' | 'updated_at' | 'deleted_at' | 'orders' | 'users' | 'zones' | 'is_selected'>> & {
     user_id: number;
+    zone_id: number;
 };
 
 interface UpdateAddressParamsType extends CreateAddressParamsType {
@@ -46,7 +47,6 @@ const addressSelect = () => {
                 id: true,
                 name: true,
                 type: true,
-                status: true,
                 cities: {
                     select: {
                         id: true,
@@ -55,6 +55,25 @@ const addressSelect = () => {
                             select: {
                                 id: true,
                                 name: true
+                            }
+                        }
+                    }
+                },
+                zone_pricing: {
+                    select: {
+                        id: true,
+                        price_for_100m: true,
+                        currencies: {
+                            select: {
+                                id: true,
+                                code: true,
+                                name: true,
+                                tips: {
+                                    select: {
+                                        id: true,
+                                        value: true,
+                                    }
+                                }
                             }
                         }
                     }
@@ -118,6 +137,11 @@ export const createAddress = async (params: CreateAddressParamsType) => {
         floor: params.floor,
         road: params.road,
         house: params.house,
+        zones: {
+            connect: {
+                id: params.zone_id
+            }
+        },
         users: {
             connect: {
                 id: params.user_id
@@ -167,6 +191,14 @@ export const updateAddress = async (params: UpdateAddressParamsType) => {
     if (params.road) {
         data.road = params.road;
     }
+
+    if (params.zone_id) {
+        data.zones = {
+            connect: {
+                id: params.zone_id
+            }
+        }
+    }
     
     try {
         const address = await prisma.user_addresses.update({
@@ -192,7 +224,37 @@ export const updateAddress = async (params: UpdateAddressParamsType) => {
                         id: true,
                         name: true,
                         type: true,
-                        status: true,
+                        cities: {
+                            select: {
+                                id: true,
+                                name: true,
+                                countries: {
+                                    select: {
+                                        id: true,
+                                        name: true
+                                    }
+                                }
+                            }
+                        },
+                        zone_pricing: {
+                            select: {
+                                id: true,
+                                price_for_100m: true,
+                                currencies: {
+                                    select: {
+                                        id: true,
+                                        code: true,
+                                        name: true,
+                                        tips: {
+                                            select: {
+                                                id: true,
+                                                value: true,
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -173,6 +173,7 @@ router.get('/:addressId', jwtAuthMiddleware, getAddressController);
  *               - lng
  *               - lat
  *               - person_name
+ *               - zone_id
  *             properties:
  *               type:
  *                 type: string
@@ -201,6 +202,9 @@ router.get('/:addressId', jwtAuthMiddleware, getAddressController);
  *                 type: string
  *                 nullable: true
  *                 example: "10B"
+ *               zone_id:
+ *                  type: number
+ *                  example: 1
  *     responses:
  *       201:
  *         description: Address created successfully
@@ -361,6 +365,9 @@ router.put('/set_as_default', jwtAuthMiddleware, setAsDefaultAddressController);
  *                 type: string
  *                 nullable: true
  *                 example: "10B"
+ *               zone_id:
+ *                  type: number
+ *                  example: 1
  *     responses:
  *       200:
  *         description: Address updated successfully
