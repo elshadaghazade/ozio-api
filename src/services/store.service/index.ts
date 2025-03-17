@@ -35,11 +35,13 @@ const orderByVariants: Record<orderByTuple, Prisma.storesOrderByWithRelationInpu
     rating_desc: { rating: 'desc' }
 }
 
-interface SearchStoresParamsType {
+export interface SearchStoresParamsType {
     keyword?: string;
-    limit?: number;
-    offset?: number;
-    orderBy?: orderByTuple | orderByTuple[]
+    limit?: number | string;
+    offset?: number | string;
+    orderBy?: orderByTuple | orderByTuple[];
+    product_limit?: number;
+    locale?: string;
 }
 
 interface GetStoreParamsType {
@@ -47,7 +49,11 @@ interface GetStoreParamsType {
     locale: string;
 }
 
-const storeSelect = () => {
+const storeSelect = (params: {
+    product_limit?: number;
+    locale: string;
+    include_products?: boolean;
+}) => {
     const select: Prisma.storesSelect = {
         id: true,
         name: true,
@@ -116,6 +122,118 @@ const storeSelect = () => {
                 id: true,
                 name: true
             }
+        },
+    }
+
+    if (params.include_products) {
+        select.store_product_variant_assignments = {
+            select: {
+                id: true,
+                price: true,
+                stock: true,
+                mrp: true,
+                min_order_quantity: true,
+                max_order_quantity: true,
+                store_product_variants: {
+                    select: {
+                        id: true,
+                        material_code: true,
+                        is_recommended: true,
+                        is_organic: true,
+                        is_halal: true,
+                        is_vegan: true,
+                        is_popular_item: true,
+                        width: true,
+                        height: true,
+                        length: true,
+                        weight: true,
+                        volume: true,
+                        store_product_variant_uploads: {
+                            select: {
+                                id: true,
+                                object_key: true,
+                                size: true,
+                                mime_type: true,
+                                extension: true,
+                                type: true
+                            },
+                        },
+                        units: {
+                            select: {
+                                id: true,
+                                symbol: true,
+                                conversion: true,
+                                unit_types: {
+                                    select: {
+                                        id: true,
+                                        unit_type_translations: {
+                                            select: {
+                                                name: true,
+                                            },
+                                            where: {
+                                                locale: {
+                                                    equals: params?.locale,
+                                                    mode: 'insensitive'
+                                                }
+                                            }
+                                        }
+                                    },
+                                }
+                            },
+                        },
+                        colors: {
+                            select: {
+                                hex_code: true,
+                            }
+                        },
+                        store_products: {
+                            select: {
+                                id: true,
+                                tax_value: true,
+                                tax_type: true,
+                            },
+                        },
+                        store_product_variant_translations: {
+                            select: {
+                                name: true,
+                            },
+                            where: {
+                                locale: params.locale
+                            }
+                        }
+                    },
+                }
+            },
+            take: params?.product_limit || 3,
+            skip: 0,
+            where: {
+                stock: {
+                    gt: 0
+                },
+                visibility: 'visible',
+                deleted_at: null,
+                // store_product_variants: {
+                //     status: 'active',
+                //     units: {
+                //         unit_types: {
+                //             status: 'active',
+                //             deleted_at: null
+                //         },
+                //         status: 'active',
+                //         deleted_at: null
+                //     },
+                //     store_products: {
+                //         deleted_at: null,
+                //     }
+                // },
+            },
+            orderBy: [
+                {
+                    store_product_variants: {
+                        rating: 'desc'
+                    }
+                }
+            ]
         }
     }
 
@@ -126,16 +244,23 @@ export const searchStores = async ({
     keyword,
     limit=50,
     offset=0,
+    product_limit=3,
+    locale='en',
     orderBy=['rating_desc', 'name_asc']
 }: SearchStoresParamsType) => {
+
     const where: Prisma.storesWhereInput = {
         status: 'active',
         deleted_at: null,
-        
     };
 
-    limit = limit && limit > 50 ? 50 : (limit && limit > 0 ? limit : 50);
-    offset = offset && offset > 0 ? offset : 0;
+    limit = Number(limit);
+    offset = Number(offset);
+    product_limit = Number(product_limit);
+
+    limit = !isNaN(limit) && limit <= 50 && limit >= 0 ? limit : 50;
+    offset = !isNaN(offset) && offset > 0 ? offset : 0;
+    product_limit = !isNaN(product_limit) && product_limit <= 10 && product_limit > 0 ? product_limit : 3;
 
     if (keyword?.trim()) {
         where.name = {
@@ -161,7 +286,10 @@ export const searchStores = async ({
 
     const stores = await prisma.stores.findMany({
         where,
-        select: storeSelect(),
+        select: storeSelect({
+            locale,
+            include_products: true
+        }),
         take: limit,
         skip: offset,
         orderBy: storesOrderBy
@@ -187,7 +315,9 @@ export const getStore = async (params: GetStoreParamsType) => {
                 status: 'active'
             },
             select: {
-                ...storeSelect(),
+                ...storeSelect({
+                    locale: params.locale
+                }),
                 store_category_id: true
             }
         });

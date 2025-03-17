@@ -9,7 +9,7 @@ const router = express.Router();
  *   get:
  *     summary: Search for stores
  *     description: Retrieves a list of active stores based on a search keyword, locale, and sorting preferences.
- *     tags: [Stores]
+ *     tags: [Stores & Products]
  *     parameters:
  *       - in: query
  *         name: keyword
@@ -17,6 +17,13 @@ const router = express.Router();
  *         schema:
  *           type: string
  *         description: Search keyword for store name.
+ *       - in: query
+ *         name: locale
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "en"
+ *         description: Language code like "en", "tr", "ru", etc.
  *       - in: query
  *         name: limit
  *         required: false
@@ -31,6 +38,15 @@ const router = express.Router();
  *           type: integer
  *           default: 0
  *         description: Number of stores to skip (for pagination).
+ *       - in: query
+ *         name: product_limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 3
+ *           maximum: 10
+ *           default: 3
+ *         description: quantity of related products to retrieve for each store, minimum is 3 & maximum is 10
  *       - in: query
  *         name: orderBy
  *         required: false
@@ -71,7 +87,7 @@ const router = express.Router();
  *                   properties:
  *                     total:
  *                       type: integer
- *                       example: 150
+ *                       example: 5
  *                     limit:
  *                       type: integer
  *                       example: 10
@@ -85,28 +101,28 @@ const router = express.Router();
  *                         properties:
  *                           id:
  *                             type: integer
- *                             example: 1
+ *                             example: 9
  *                           name:
  *                             type: string
- *                             example: "SuperMart"
+ *                             example: "Schuster-Grant"
  *                           store_code:
  *                             type: string
- *                             example: "SM123"
+ *                             example: "5485262800103"
  *                           phone:
  *                             type: string
- *                             example: "+1234567890"
+ *                             example: "+1-305-250-1631"
  *                           email:
  *                             type: string
- *                             example: "contact@supermart.com"
+ *                             example: "genevieve07@example.net"
  *                           lat:
- *                             type: number
- *                             example: 40.73061
+ *                             type: string
+ *                             example: "58.755154"
  *                           lng:
- *                             type: number
- *                             example: -73.935242
+ *                             type: string
+ *                             example: "52.31615"
  *                           rating:
- *                             type: number
- *                             example: 4.5
+ *                             type: string
+ *                             example: "2.15"
  *                           have_not_vegan:
  *                             type: boolean
  *                             example: true
@@ -115,64 +131,16 @@ const router = express.Router();
  *                             example: false
  *                           has_packet:
  *                             type: boolean
- *                             example: true
+ *                             example: false
  *                           open_time:
  *                             type: string
- *                             example: "08:00"
+ *                             format: date-time
+ *                             example: "1970-01-01T04:18:24.000Z"
  *                           close_time:
  *                             type: string
- *                             example: "22:00"
- *                           store_detail_contents:
- *                             type: array
- *                             items:
- *                               type: object
- *                               properties:
- *                                 display_name:
- *                                   type: string
- *                                   example: "Organic Foods"
- *                                 type:
- *                                   type: string
- *                                   example: "Grocery"
- *                                 category_more_btn:
- *                                   type: boolean
- *                                   example: true
- *                           currencies:
- *                             type: object
- *                             properties:
- *                               id:
- *                                 type: integer
- *                                 example: 1
- *                               code:
- *                                 type: string
- *                                 example: "USD"
- *                           modules:
- *                             type: object
- *                             properties:
- *                               id:
- *                                 type: integer
- *                                 example: 1
- *                               name:
- *                                 type: string
- *                                 example: "Retail"
- *                           cities:
- *                             type: object
- *                             properties:
- *                               id:
- *                                 type: integer
- *                                 example: 10
- *                               name:
- *                                 type: string
- *                                 example: "New York"
- *                               countries:
- *                                 type: object
- *                                 properties:
- *                                   id:
- *                                     type: integer
- *                                     example: 1
- *                                   name:
- *                                     type: string
- *                                     example: "United States"
- *                           zones:
+ *                             format: date-time
+ *                             example: "1970-01-01T06:59:43.000Z"
+ *                           store_product_variant_assignments:
  *                             type: array
  *                             items:
  *                               type: object
@@ -180,20 +148,84 @@ const router = express.Router();
  *                                 id:
  *                                   type: integer
  *                                   example: 2
- *                                 name:
+ *                                 price:
  *                                   type: string
- *                                   example: "Downtown Zone"
- *                           store_branches:
- *                             type: array
- *                             items:
- *                               type: object
- *                               properties:
- *                                 id:
- *                                   type: integer
- *                                   example: 5
- *                                 name:
+ *                                   example: "879.93"
+ *                                 stock:
  *                                   type: string
- *                                   example: "SuperMart - Times Square"
+ *                                   example: "43.81"
+ *                                 mrp:
+ *                                   type: string
+ *                                   example: "831.24"
+ *                                 min_order_quantity:
+ *                                   type: string
+ *                                   example: "4.46"
+ *                                 max_order_quantity:
+ *                                   type: string
+ *                                   nullable: true
+ *                                   example: null
+ *                                 store_product_variants:
+ *                                   type: object
+ *                                   properties:
+ *                                     id:
+ *                                       type: integer
+ *                                       example: 6
+ *                                     material_code:
+ *                                       type: string
+ *                                       example: "337444"
+ *                                     is_recommended:
+ *                                       type: boolean
+ *                                       example: false
+ *                                     is_organic:
+ *                                       type: boolean
+ *                                       example: true
+ *                                     is_halal:
+ *                                       type: boolean
+ *                                       example: false
+ *                                     is_vegan:
+ *                                       type: boolean
+ *                                       example: false
+ *                                     is_popular_item:
+ *                                       type: boolean
+ *                                       example: true
+ *                                     width:
+ *                                       type: integer
+ *                                       example: 17
+ *                                     height:
+ *                                       type: integer
+ *                                       example: 68
+ *                                     length:
+ *                                       type: integer
+ *                                       example: 9
+ *                                     weight:
+ *                                       type: integer
+ *                                       example: 73
+ *                                     volume:
+ *                                       type: integer
+ *                                       example: 35
+ *                                     store_product_variant_uploads:
+ *                                       type: array
+ *                                       items:
+ *                                         type: object
+ *                                         properties:
+ *                                           id:
+ *                                             type: integer
+ *                                             example: 1
+ *                                           object_key:
+ *                                             type: string
+ *                                             example: "uploads/store_variant_1.jpg"
+ *                                           size:
+ *                                             type: number
+ *                                             example: 2048
+ *                                           mime_type:
+ *                                             type: string
+ *                                             example: "image/jpeg"
+ *                                           extension:
+ *                                             type: string
+ *                                             example: "jpg"
+ *                                           type:
+ *                                             type: string
+ *                                             example: "thumbnail"
  *       400:
  *         description: Missing or invalid locale parameter
  *         content:
@@ -215,7 +247,7 @@ router.get('/search', searchStoreController);
  *   get:
  *     summary: Get store details
  *     description: Retrieves details of a specific store along with its category translation.
- *     tags: [Stores]
+ *     tags: [Stores & Products]
  *     parameters:
  *       - in: path
  *         name: store_id
@@ -229,7 +261,7 @@ router.get('/search', searchStoreController);
  *         schema:
  *           type: string
  *           default: "en"
- *         description: The locale for category translation (e.g., "en", "fr", "es").
+ *         description: The locale for product translation (e.g., "en", "fr", "es").
  *     responses:
  *       200:
  *         description: Successfully retrieved store details

@@ -1,6 +1,6 @@
-import { getStore, orderByTuple, searchStores } from "@/services/store.service";
+import { getStore, searchStores, SearchStoresParamsType } from "@/services/store.service";
 import { ApiResponse } from "@/utils/apiResponse";
-import { Request, Response, NextFunction } from "express"
+import { Request, Response, NextFunction } from "express";
 
 export const searchStoreController = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -8,20 +8,16 @@ export const searchStoreController = async (req: Request, res: Response, next: N
             keyword,
             limit,
             offset,
-            orderBy
-        } = req.query as {
-            keyword?: string;
-            limit?: string;
-            offset?: string;
-            locale: string;
-            orderBy?: orderByTuple | orderByTuple[]
-        };
+            orderBy,
+            locale
+        }: SearchStoresParamsType = req.query;
 
         const { stores, count: total } = await searchStores({
             keyword,
-            limit: limit?.length ? Number(limit) : undefined,
-            offset: offset?.length ? Number(offset) : undefined,
-            orderBy
+            limit,
+            offset,
+            orderBy,
+            locale
         });
 
         res.json(ApiResponse.success({

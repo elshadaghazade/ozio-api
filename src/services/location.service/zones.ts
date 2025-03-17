@@ -22,6 +22,19 @@ export const getZones = async (city_id: number) => {
                         }
                     }
                 }
+            },
+            zone_pricing: {
+                select: {
+                    id: true,
+                    currencies: {
+                        select: {
+                            id: true,
+                            code: true,
+                            name: true,
+                        }
+                    },
+                    price_for_100m: true
+                }
             }
         },
         orderBy: [
