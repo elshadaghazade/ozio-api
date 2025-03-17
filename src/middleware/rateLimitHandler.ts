@@ -17,20 +17,7 @@ export const getGlobalRateLimit = (params?: Partial<Options>) => {
             throw new BadRequestException();
         }
 
-        const keys: string[] = [];
-
-        keys.push(req.ip);
-        keys.push(req.path);
-
-        if (req.params) {
-            keys.push(JSON.stringify(req.params));
-        }
-        
-        if (req.query) {
-            keys.push(JSON.stringify(req.query));
-        }
-
-        return keys.join('');
+        return `${req.ip}${req.path}`;
     }
 
     const limiter = rateLimit({
