@@ -11,7 +11,9 @@ export const getMe = async ({
     try {
         const user = await prisma.users.findUniqueOrThrow({
             where: {
-                id: user_id
+                id: user_id,
+                deleted_at: null,
+                block_type: 'not_blocked'
             },
             select: {
                 id: true,

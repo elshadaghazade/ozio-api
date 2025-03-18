@@ -77,6 +77,8 @@ model brands {
   updated_at                       DateTime?                          @db.Timestamp(0)
   deleted_at                       DateTime?                          @db.Timestamp(0)
   store_detail_contents_and_brands store_detail_contents_and_brands[]
+
+  @@unique([name, deleted_at], map: "brands_name_deleted_at_unique")
 }
 
 model cache {
@@ -154,6 +156,8 @@ model cities {
   stores     stores[]
   users      users[]
   zones      zones[]
+
+  @@unique([name, deleted_at], map: "cities_name_deleted_at_unique")
 }
 
 model countries {
@@ -213,12 +217,14 @@ model courier_vehicles {
   created_at     DateTime? @db.Timestamp(0)
   updated_at     DateTime? @db.Timestamp(0)
   deleted_at     DateTime? @db.Timestamp(0)
+
+  @@unique([name, deleted_at], map: "courier_vehicles_name_deleted_at_unique")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model couriers {
   id                     BigInt                   @id @default(autoincrement())
-  name                   String                   @unique(map: "couriers_name_unique") @db.VarChar(255)
+  name                   String                   @db.VarChar(255)
   phone                  String?                  @db.VarChar(255)
   store_id               BigInt
   total_earn             Decimal                  @default(0) @db.Decimal(8, 2)
@@ -255,6 +261,8 @@ model currencies {
   stores       stores[]
   tips         tips[]
   zone_pricing zone_pricing[]
+
+  @@unique([name, deleted_at], map: "currencies_name_deleted_at_unique")
 }
 
 model failed_jobs {
@@ -303,6 +311,8 @@ model languages {
   sort_order Int       @default(0)
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
+
+  @@unique([name, code], map: "languages_name_code_unique")
 }
 
 model migrations {
@@ -345,6 +355,8 @@ model modules {
   orders                orders[]
   store_categories      store_categories[]
   stores                stores[]
+
+  @@unique([name, deleted_at], map: "modules_name_deleted_at_unique")
 }
 
 model modules_zones {
@@ -555,6 +567,8 @@ model store_branches {
   deleted_at                           DateTime?                              @db.Timestamp(0)
   store_product_assignment_permissions store_product_assignment_permissions[]
   stores                               stores[]
+
+  @@unique([name, deleted_at], map: "store_branches_name_deleted_at_unique")
 }
 
 model store_cart_items {
@@ -575,15 +589,16 @@ model store_cart_items {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model store_categories {
-  id         BigInt    @id @default(autoincrement())
-  module_id  BigInt
-  priority   Int       @default(0) @db.SmallInt
-  status     String    @default("active") @db.VarChar(255)
-  created_at DateTime? @db.Timestamp(0)
-  updated_at DateTime? @db.Timestamp(0)
-  deleted_at DateTime? @db.Timestamp(0)
-  modules    modules   @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_categories_module_id_foreign")
-  stores     stores[]
+  id           BigInt    @id @default(autoincrement())
+  module_id    BigInt
+  priority     Int       @default(0) @db.SmallInt
+  status       String    @default("active") @db.VarChar(255)
+  search_count Int       @default(0)
+  created_at   DateTime? @db.Timestamp(0)
+  updated_at   DateTime? @db.Timestamp(0)
+  deleted_at   DateTime? @db.Timestamp(0)
+  modules      modules   @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_categories_module_id_foreign")
+  stores       stores[]
 }
 
 model store_category_translations {
@@ -605,13 +620,15 @@ model store_detail_contents {
   store_id                                 BigInt
   type                                     String                                     @db.VarChar(255)
   category_more_btn                        Boolean?
-  deleted_at                               DateTime?                                  @db.Timestamp(0)
   created_at                               DateTime?                                  @db.Timestamp(0)
   updated_at                               DateTime?                                  @db.Timestamp(0)
+  deleted_at                               DateTime?                                  @db.Timestamp(0)
   stores                                   stores                                     @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_detail_contents_store_id_foreign")
   store_detail_contents_and_brands         store_detail_contents_and_brands[]
   store_detail_contents_and_store_products store_detail_contents_and_store_products[]
   store_detail_divisions_and_contents      store_detail_divisions_and_contents[]
+
+  @@unique([display_name, deleted_at], map: "store_detail_contents_display_name_deleted_at_unique")
 }
 
 model store_detail_division_translations {
@@ -634,12 +651,14 @@ model store_detail_divisions {
   status                                                String                                                  @default("active") @db.VarChar(255)
   store_id                                              BigInt
   priority                                              Int                                                     @default(0) @db.SmallInt
-  deleted_at                                            DateTime?                                               @db.Timestamp(0)
   created_at                                            DateTime?                                               @db.Timestamp(0)
   updated_at                                            DateTime?                                               @db.Timestamp(0)
+  deleted_at                                            DateTime?                                               @db.Timestamp(0)
   stores                                                stores                                                  @relation(fields: [store_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_detail_divisions_store_id_foreign")
   store_detail_divisions_and_contents                   store_detail_divisions_and_contents[]
   store_detail_divisions_and_store_products_assignments store_detail_divisions_and_store_products_assignments[]
+
+  @@unique([display_name, deleted_at], map: "store_detail_divisions_display_name_deleted_at_unique")
 }
 
 model store_detail_divisions_and_contents {
@@ -683,7 +702,10 @@ model store_holidays {
   assign_all_stores     Boolean                 @default(false)
   created_at            DateTime?               @db.Timestamp(0)
   updated_at            DateTime?               @db.Timestamp(0)
+  deleted_at            DateTime?               @db.Timestamp(0)
   stores_store_holidays stores_store_holidays[]
+
+  @@unique([name, deleted_at], map: "store_holidays_name_deleted_at_unique")
 }
 
 model store_product_assignment_permissions {
@@ -798,6 +820,7 @@ model store_product_variants {
   unit_id                              BigInt
   created_at                           DateTime?                              @db.Timestamp(0)
   updated_at                           DateTime?                              @db.Timestamp(0)
+  deleted_at                           DateTime?                              @db.Timestamp(0)
   store_product_variant_assignments    store_product_variant_assignments[]
   store_product_variant_barcodes       store_product_variant_barcodes[]
   store_product_variant_ratings        store_product_variant_ratings[]
@@ -808,6 +831,8 @@ model store_product_variants {
   store_products                       store_products                         @relation(fields: [store_product_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_variants_store_product_id_foreign")
   units                                units                                  @relation(fields: [unit_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_product_variants_unit_id_foreign")
   user_favorite_store_product_variants user_favorite_store_product_variants[]
+
+  @@unique([material_code, deleted_at], map: "store_product_variants_material_code_deleted_at_unique")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -894,6 +919,8 @@ model stores {
   zones                             zones?                              @relation(fields: [zone_id], references: [id], onUpdate: NoAction, map: "stores_zone_id_foreign")
   stores_store_holidays             stores_store_holidays[]
   user_favorite_stores              user_favorite_stores[]
+
+  @@unique([name, store_code, deleted_at], map: "stores_name_store_code_deleted_at_unique")
 }
 
 model stores_store_holidays {
@@ -1093,7 +1120,6 @@ model user_notifications {
   user_id    BigInt
   title      String    @db.VarChar(255)
   content    String    @db.VarChar(255)
-  image      String    @db.VarChar(255)
   read_at    DateTime? @db.Timestamp(0)
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
@@ -1113,6 +1139,7 @@ model users {
   gender                               String                                 @db.VarChar(255)
   want_notification                    Boolean                                @default(true)
   card_number                          String                                 @unique(map: "users_card_number_unique") @db.VarChar(255)
+  block_type                           String                                 @default("not_blocked") @db.VarChar(255)
   created_at                           DateTime?                              @db.Timestamp(0)
   updated_at                           DateTime?                              @db.Timestamp(0)
   deleted_at                           DateTime?                              @db.Timestamp(0)
@@ -1130,7 +1157,7 @@ model users {
   user_notifications                   user_notifications[]
   cities                               cities                                 @relation(fields: [city_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "users_city_id_foreign")
 
-  @@unique([phone, card_number, ref_code, deleted_at], map: "users_phone_card_number_ref_code_deleted_at_unique")
+  @@unique([name, phone, card_number, ref_code, deleted_at], map: "users_name_phone_card_number_ref_code_deleted_at_unique")
 }
 
 model zone_pricing {
@@ -1162,6 +1189,8 @@ model zones {
   user_addresses             user_addresses[]
   zone_pricing               zone_pricing[]
   cities                     cities                       @relation(fields: [city_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "zones_city_id_foreign")
+
+  @@unique([name, deleted_at], map: "zones_name_deleted_at_unique")
 }
 
 model courier_mission_stores {
@@ -1221,14 +1250,16 @@ model store_detail_contents_and_store_products {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model bonus_cards {
   id          BigInt    @id @default(autoincrement())
-  card_number String    @unique(map: "bonus_cards_card_number_unique") @db.VarChar(255)
+  card_number String    @db.VarChar(255)
   total       Decimal   @default(0) @db.Decimal(8, 2)
   bonus       Decimal   @default(0) @db.Decimal(8, 2)
   type        String    @default("digital") @db.VarChar(255)
   block_type  String    @default("not_blocked") @db.VarChar(255)
-  deleted_at  DateTime? @db.Timestamp(0)
   created_at  DateTime? @db.Timestamp(0)
   updated_at  DateTime? @db.Timestamp(0)
+  deleted_at  DateTime? @db.Timestamp(0)
+
+  @@unique([card_number, deleted_at], map: "bonus_cards_card_number_deleted_at_unique")
 }
 
 model colors {
@@ -1257,6 +1288,9 @@ model card_bonus_percentages {
   start_date  DateTime  @db.Timestamp(0)
   created_at  DateTime? @db.Timestamp(0)
   updated_at  DateTime? @db.Timestamp(0)
+  deleted_at  DateTime? @db.Timestamp(0)
+
+  @@unique([card_number, deleted_at], map: "card_bonus_percentages_card_number_deleted_at_unique")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -1269,6 +1303,9 @@ model courier_bonus_cards {
   block_type  String    @default("not_blocked") @db.VarChar(255)
   created_at  DateTime? @db.Timestamp(0)
   updated_at  DateTime? @db.Timestamp(0)
+  deleted_at  DateTime? @db.Timestamp(0)
+
+  @@unique([card_number, deleted_at], map: "courier_bonus_cards_card_number_deleted_at_unique")
 }
 
 model store_bonus_percentages {
@@ -1279,6 +1316,8 @@ model store_bonus_percentages {
   created_at DateTime? @db.Timestamp(0)
   updated_at DateTime? @db.Timestamp(0)
   deleted_at DateTime? @db.Timestamp(0)
+
+  @@unique([store_code, deleted_at], map: "store_bonus_percentages_store_code_deleted_at_unique")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -1294,6 +1333,9 @@ model store_product_variant_bonus_percentages {
   end_date     DateTime  @db.Date
   created_at   DateTime? @db.Timestamp(0)
   updated_at   DateTime? @db.Timestamp(0)
+  deleted_at   DateTime? @db.Timestamp(0)
+
+  @@unique([store_code, barcode, deleted_at], map: "store_product_variant_bonus_percentages_store_code_barcode_dele")
 }
 
 model store_service_translations {

@@ -263,10 +263,30 @@ export const searchStores = async ({
     product_limit = !isNaN(product_limit) && product_limit <= 10 && product_limit > 0 ? product_limit : 3;
 
     if (keyword?.trim()) {
-        where.name = {
-            contains: keyword,
-            mode: 'insensitive'
-        }
+        where.OR = [
+            {
+                store_product_variant_assignments: {
+                    some: {
+                        store_product_variants: {
+                            store_product_variant_translations: {
+                                some: {
+                                    name: {
+                                        contains: keyword,
+                                        mode: 'insensitive'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                name: {
+                    contains: keyword,
+                    mode: 'insensitive'
+                }
+            }
+        ];
     }
 
     const storesOrderBy: Prisma.storesOrderByWithRelationInput[] = [];

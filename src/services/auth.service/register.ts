@@ -20,7 +20,8 @@ export const completeRegistration = async (params: CompleteRegistrationParamsTyp
     await prisma.users.update({
         where: {
             id: params.user_id,
-            deleted_at: null
+            deleted_at: null,
+            block_type: 'not_blocked'
         },
         data: {
             name: params.fullName,

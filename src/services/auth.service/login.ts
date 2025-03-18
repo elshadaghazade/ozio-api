@@ -23,7 +23,8 @@ export const login = async ({
     let user = await prisma.users.findFirst({
         where: {
             phone,
-            deleted_at: null
+            deleted_at: null,
+            block_type: 'not_blocked'
         },
         select: {
             id: true,
@@ -43,6 +44,7 @@ export const login = async ({
                 gender: 'male',
                 card_number: '',
                 phone,
+                block_type: 'not_blocked',
                 created_at: new Date(),
             },
             select: {
@@ -84,7 +86,8 @@ export const login = async ({
         },
         where: {
             id: user.id,
-            deleted_at: null
+            deleted_at: null,
+            block_type: 'not_blocked'
         },
         select: {
             id: true,
