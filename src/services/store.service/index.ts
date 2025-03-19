@@ -49,11 +49,147 @@ interface GetStoreParamsType {
     locale: string;
 }
 
-const storeSelect = (params: {
+interface SelectFuncParamsType {
     product_limit?: number;
     locale: string;
     include_products?: boolean;
-}) => {
+}
+
+const storeProductVariantAssignmentSelect = (params: SelectFuncParamsType) => {
+    const select: Prisma.store_product_variant_assignmentsFindManyArgs = {
+        select: {
+            id: true,
+            price: true,
+            stock: true,
+            mrp: true,
+            min_order_quantity: true,
+            max_order_quantity: true,
+            store_product_variants: {
+                select: {
+                    id: true,
+                    material_code: true,
+                    is_recommended: true,
+                    is_organic: true,
+                    is_halal: true,
+                    is_vegan: true,
+                    is_popular_item: true,
+                    width: true,
+                    height: true,
+                    length: true,
+                    weight: true,
+                    volume: true,
+                    store_product_variant_uploads: {
+                        select: {
+                            id: true,
+                            object_key: true,
+                            size: true,
+                            mime_type: true,
+                            extension: true,
+                            type: true
+                        },
+                    },
+                    units: {
+                        select: {
+                            id: true,
+                            symbol: true,
+                            conversion: true,
+                            unit_types: {
+                                select: {
+                                    id: true,
+                                    unit_type_translations: {
+                                        select: {
+                                            name: true,
+                                        },
+                                        where: {
+                                            locale: {
+                                                equals: params?.locale,
+                                                mode: 'insensitive'
+                                            }
+                                        }
+                                    }
+                                },
+                            }
+                        },
+                    },
+                    colors: {
+                        select: {
+                            hex_code: true,
+                        }
+                    },
+                    store_products: {
+                        select: {
+                            id: true,
+                            tax_value: true,
+                            tax_type: true,
+                            store_products_categories: {
+                                select: {
+                                    categories: {
+                                        select: {
+                                            id: true,
+                                            category_translations: {
+                                                select: {
+                                                    name: true,
+                                                },
+                                                where: {
+                                                    locale: {
+                                                        equals: params.locale,
+                                                        mode: 'insensitive'
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                    },
+                    store_product_variant_translations: {
+                        select: {
+                            name: true,
+                        },
+                        where: {
+                            locale: params.locale
+                        }
+                    }
+                },
+            }
+        },
+        take: params?.product_limit || 3,
+        skip: 0,
+        where: {
+            stock: {
+                gt: 0
+            },
+            visibility: 'visible',
+            deleted_at: null,
+            // store_product_variants: {
+            //     status: 'active',
+            //     units: {
+            //         unit_types: {
+            //             status: 'active',
+            //             deleted_at: null
+            //         },
+            //         status: 'active',
+            //         deleted_at: null
+            //     },
+            //     store_products: {
+            //         deleted_at: null,
+            //     }
+            // },
+        },
+        orderBy: [
+            {
+                store_product_variants: {
+                    rating: 'desc'
+                }
+            }
+        ]
+    }
+
+    return select;
+}
+
+const storeSelect = (params: SelectFuncParamsType) => {
     const select: Prisma.storesSelect = {
         id: true,
         name: true,
@@ -79,38 +215,6 @@ const storeSelect = (params: {
             select: {
                 id: true,
                 name: true,
-            }
-        },
-        store_product_variant_assignments: {
-            select: {
-                store_product_variants: {
-                    select: {
-                        store_products: {
-                            select: {
-                                store_products_categories: {
-                                    select: {
-                                        categories: {
-                                            select: {
-                                                id: true,
-                                                category_translations: {
-                                                    select: {
-                                                        name: true,
-                                                    },
-                                                    where: {
-                                                        locale: {
-                                                            equals: params.locale,
-                                                            mode: 'insensitive'
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
             }
         },
         zones: {
@@ -159,135 +263,7 @@ const storeSelect = (params: {
     }
 
     if (params.include_products) {
-        select.store_product_variant_assignments = {
-            select: {
-                id: true,
-                price: true,
-                stock: true,
-                mrp: true,
-                min_order_quantity: true,
-                max_order_quantity: true,
-                store_product_variants: {
-                    select: {
-                        id: true,
-                        material_code: true,
-                        is_recommended: true,
-                        is_organic: true,
-                        is_halal: true,
-                        is_vegan: true,
-                        is_popular_item: true,
-                        width: true,
-                        height: true,
-                        length: true,
-                        weight: true,
-                        volume: true,
-                        store_product_variant_uploads: {
-                            select: {
-                                id: true,
-                                object_key: true,
-                                size: true,
-                                mime_type: true,
-                                extension: true,
-                                type: true
-                            },
-                        },
-                        units: {
-                            select: {
-                                id: true,
-                                symbol: true,
-                                conversion: true,
-                                unit_types: {
-                                    select: {
-                                        id: true,
-                                        unit_type_translations: {
-                                            select: {
-                                                name: true,
-                                            },
-                                            where: {
-                                                locale: {
-                                                    equals: params?.locale,
-                                                    mode: 'insensitive'
-                                                }
-                                            }
-                                        }
-                                    },
-                                }
-                            },
-                        },
-                        colors: {
-                            select: {
-                                hex_code: true,
-                            }
-                        },
-                        store_products: {
-                            select: {
-                                id: true,
-                                tax_value: true,
-                                tax_type: true,
-                                store_products_categories: {
-                                    select: {
-                                        categories: {
-                                            select: {
-                                                id: true,
-                                                category_translations: {
-                                                    select: {
-                                                        name: true,
-                                                    },
-                                                    where: {
-                                                        locale: {
-                                                            equals: params.locale,
-                                                            mode: 'insensitive'
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            },
-                        },
-                        store_product_variant_translations: {
-                            select: {
-                                name: true,
-                            },
-                            where: {
-                                locale: params.locale
-                            }
-                        }
-                    },
-                }
-            },
-            take: params?.product_limit || 3,
-            skip: 0,
-            where: {
-                stock: {
-                    gt: 0
-                },
-                visibility: 'visible',
-                deleted_at: null,
-                // store_product_variants: {
-                //     status: 'active',
-                //     units: {
-                //         unit_types: {
-                //             status: 'active',
-                //             deleted_at: null
-                //         },
-                //         status: 'active',
-                //         deleted_at: null
-                //     },
-                //     store_products: {
-                //         deleted_at: null,
-                //     }
-                // },
-            },
-            orderBy: [
-                {
-                    store_product_variants: {
-                        rating: 'desc'
-                    }
-                }
-            ]
-        }
+        select.store_product_variant_assignments = storeProductVariantAssignmentSelect(params);
     }
 
     return select;
@@ -315,7 +291,9 @@ export const searchStores = async ({
     offset = !isNaN(offset) && offset > 0 ? offset : 0;
     product_limit = !isNaN(product_limit) && product_limit <= 10 && product_limit > 0 ? product_limit : 3;
 
-    if (keyword?.trim()) {
+    keyword = keyword?.trim();
+
+    if (keyword) {
         where.OR = [
             {
                 store_product_variant_assignments: {
@@ -409,9 +387,61 @@ export const getStore = async (params: GetStoreParamsType) => {
             }
         });
 
+        const storeBonusPercentage = await prisma.store_bonus_percentages.findMany({
+            where: {
+                store_code: store.store_code,
+                deleted_at: null,
+            },
+            select: {
+                id: true,
+                percentage: true,
+                start_date: true,
+            }
+        });
+
+        const storeDetailDivisionsAndContent = await prisma.store_detail_divisions_and_contents.findMany({
+            where: {
+                store_detail_contents: {
+                    store_id: params.store_id,
+                    deleted_at: null,
+                },
+                store_detail_divisions: {
+                    store_id: params.store_id,
+                    deleted_at: null,
+                    status: 'active'
+                }
+            },
+            select: {
+                id: true,
+                store_detail_divisions: {
+                    select: {
+                        display_name: true,
+                        type: true,
+                    }
+                },
+                store_detail_contents: {
+                    select: {
+                        id: true,
+                        display_name: true,
+                        type: true,
+                        category_more_btn: true,
+                    }
+                }
+            },
+            orderBy: [
+                {
+                    store_detail_divisions: {
+                        priority: 'asc'
+                    }
+                }
+            ]
+        })
+
         return {
             store,
-            category: storeCategoryTranslation
+            category: storeCategoryTranslation,
+            storeBonusPercentage,
+            storeDetailDivisionsAndContent
         }
 
     } catch {
