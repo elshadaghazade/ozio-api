@@ -8,7 +8,7 @@ const router = express.Router();
  * /api/v1/categories:
  *   get:
  *     summary: Get active parent categories
- *     description: Retrieves a list of active parent categories with translations based on the provided locale.
+ *     description: Retrieves a list of active parent categories with translations based on the provided locale, the distinct count of related store products, and an image key.
  *     tags: [Category]
  *     parameters:
  *       - in: query
@@ -42,26 +42,29 @@ const router = express.Router();
  *                       id:
  *                         type: integer
  *                         example: 1
- *                       modules:
- *                         type: object
- *                         properties:
- *                           id:
- *                             type: integer
- *                             example: 1
- *                           name:
- *                             type: string
- *                             example: "market"
- *                       category_translations:
- *                         type: array
- *                         items:
- *                           type: object
- *                           properties:
- *                             name:
- *                               type: string
- *                               example: "Electronics"
- *                             locale:
- *                               type: string
- *                               example: "en"
+ *                       status:
+ *                         type: string
+ *                         example: "active"
+ *                       module_id:
+ *                         type: integer
+ *                         example: 1
+ *                       module_name:
+ *                         type: string
+ *                         example: "market"
+ *                       category_name:
+ *                         type: string
+ *                         example: "Electronics"
+ *                       locale:
+ *                         type: string
+ *                         example: "en"
+ *                       store_products_count:
+ *                         type: integer
+ *                         example: 2
+ *                         description: The distinct count of store products related to the category.
+ *                       image_key:
+ *                         type: string
+ *                         example: "uploads/2025/03/18/9bb9f2d4-9f81-4b5c-8427-9c73720197a3.png"
+ *                         description: The URL or path to the category image.
  *       400:
  *         description: Missing or invalid locale parameter
  *         content:
@@ -75,6 +78,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
+
 router.get('/', getCategoriesController);
 
 export default router;

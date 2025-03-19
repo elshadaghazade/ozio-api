@@ -77,6 +77,7 @@ model brands {
   updated_at                       DateTime?                          @db.Timestamp(0)
   deleted_at                       DateTime?                          @db.Timestamp(0)
   store_detail_contents_and_brands store_detail_contents_and_brands[]
+  store_products                   store_products[]
 
   @@unique([name, deleted_at], map: "brands_name_deleted_at_unique")
 }
@@ -117,6 +118,7 @@ model categories {
   category_relations_category_relations_child_idTocategories  category_relations[]         @relation("category_relations_child_idTocategories")
   category_relations_category_relations_parent_idTocategories category_relations[]         @relation("category_relations_parent_idTocategories")
   category_translations                                       category_translations[]
+  slider_images                                               slider_images[]
   store_products_categories                                   store_products_categories[]
   user_interested_categories                                  user_interested_categories[]
 }
@@ -174,22 +176,28 @@ model countries {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model coupons {
-  id                     BigInt             @id @default(autoincrement())
-  limit                  Int
-  code                   String             @db.VarChar(255)
-  discount_type          String             @db.VarChar(255)
-  discount_value         Decimal            @db.Decimal(8, 2)
-  start_date             DateTime           @db.Date
-  start_time             DateTime           @db.Time(0)
-  end_date               DateTime           @db.Date
-  end_time               DateTime           @db.Time(0)
-  status                 String             @default("active") @db.VarChar(255)
-  active_for_first_order Boolean            @default(false)
-  created_at             DateTime?          @db.Timestamp(0)
-  updated_at             DateTime?          @db.Timestamp(0)
-  deleted_at             DateTime?          @db.Timestamp(0)
-  assigned_coupons       assigned_coupons[]
-  orders                 orders[]
+  id                  BigInt                @id @default(autoincrement())
+  code                String                @unique(map: "coupons_code_unique") @db.VarChar(255)
+  discount_type       String                @default("percentage") @db.VarChar(255)
+  discount_value      Decimal               @db.Decimal(10, 2)
+  start_price         Decimal?              @db.Decimal(10, 2)
+  usage_limit         Int?
+  daily_usage_limit   Int?
+  reuse_after_days    Int?
+  coupon_order        Int?
+  first_order_only    Boolean               @default(false)
+  start_date          DateTime?             @db.Date
+  end_date            DateTime?             @db.Date
+  daily_start_time    DateTime?             @db.Time(0)
+  daily_end_time      DateTime?             @db.Time(0)
+  status              String                @default("active") @db.VarChar(255)
+  deleted_at          DateTime?             @db.Timestamp(0)
+  created_at          DateTime?             @db.Timestamp(0)
+  updated_at          DateTime?             @db.Timestamp(0)
+  assigned_coupons    assigned_coupons[]
+  coupon_restrictions coupon_restrictions[]
+  coupon_usages       coupon_usages[]
+  orders              orders[]
 }
 
 model courier_ratings {
@@ -415,7 +423,7 @@ model order_based_campaigns {
   end_date                          DateTime                            @db.Date
   start_time                        DateTime                            @db.Time(0)
   end_time                          DateTime                            @db.Time(0)
-  is_active                         Boolean                             @default(false)
+  status                            String                              @default("inactive") @db.VarChar(255)
   can_repeat                        Boolean                             @default(true)
   deleted_at                        DateTime?                           @db.Timestamp(0)
   created_at                        DateTime?                           @db.Timestamp(0)
@@ -802,7 +810,7 @@ model store_product_variant_uploads {
 model store_product_variants {
   id                                   BigInt                                 @id @default(autoincrement())
   store_product_id                     BigInt
-  material_code                        String                                 @db.VarChar(255)
+  material_code                        String                                 @unique(map: "store_product_variants_material_code_unique") @db.VarChar(255)
   order_count                          Int                                    @default(0)
   rating                               String                                 @default("0") @db.VarChar(255)
   is_recommended                       Boolean
@@ -838,16 +846,19 @@ model store_product_variants {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model store_products {
   id                                       BigInt                                     @id @default(autoincrement())
-  tax_value                                Decimal                                    @db.Decimal(8, 2)
-  tax_type                                 String                                     @default("percentage") @db.VarChar(255)
+  tax_value                                Decimal                                    @default(0) @db.Decimal(8, 2)
+  tax_type                                 String                                     @default("fixed") @db.VarChar(255)
   status                                   String                                     @default("active") @db.VarChar(255)
+  brand_id                                 BigInt
   created_at                               DateTime?                                  @db.Timestamp(0)
   updated_at                               DateTime?                                  @db.Timestamp(0)
   deleted_at                               DateTime?                                  @db.Timestamp(0)
+  slider_images                            slider_images[]
   store_cart_items                         store_cart_items[]
   store_detail_contents_and_store_products store_detail_contents_and_store_products[]
   store_product_assignment_permissions     store_product_assignment_permissions[]
   store_product_variants                   store_product_variants[]
+  brands                                   brands                                     @relation(fields: [brand_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "store_products_brand_id_foreign")
   store_products_categories                store_products_categories[]
 }
 
@@ -888,7 +899,8 @@ model stores {
   lat                               String                              @db.VarChar(255)
   lng                               String                              @db.VarChar(255)
   status                            String                              @default("active") @db.VarChar(255)
-  rating                            String                              @default("0") @db.VarChar(255)
+  rating                            Decimal                             @default(0) @db.Decimal(8, 2)
+  rating_count                      Int                                 @default(0)
   store_category_id                 BigInt?
   have_vegan                        Boolean
   have_not_vegan                    Boolean
@@ -905,6 +917,7 @@ model stores {
   couriers                          couriers[]
   order_based_campaign_stores       order_based_campaign_stores[]
   orders                            orders[]
+  slider_images                     slider_images[]
   store_detail_contents             store_detail_contents[]
   store_detail_divisions            store_detail_divisions[]
   store_devices                     store_devices[]
@@ -1145,6 +1158,7 @@ model users {
   deleted_at                           DateTime?                              @db.Timestamp(0)
   assigned_coupons                     assigned_coupons[]
   carts                                carts[]
+  coupon_usages                        coupon_usages[]
   orders                               orders[]
   otps                                 otps[]
   store_product_variant_ratings        store_product_variant_ratings[]
@@ -1324,7 +1338,7 @@ model store_bonus_percentages {
 model store_product_variant_bonus_percentages {
   id           BigInt    @id @default(autoincrement())
   store_code   String    @db.VarChar(255)
-  barcode      String    @db.VarChar(255)
+  variant_code String    @db.VarChar(255)
   percentage   Decimal   @default(0) @db.Decimal(8, 2)
   for_online   String    @default("active") @db.VarChar(255)
   for_physical String    @default("active") @db.VarChar(255)
@@ -1335,7 +1349,7 @@ model store_product_variant_bonus_percentages {
   updated_at   DateTime? @db.Timestamp(0)
   deleted_at   DateTime? @db.Timestamp(0)
 
-  @@unique([store_code, barcode, deleted_at], map: "store_product_variant_bonus_percentages_store_code_barcode_dele")
+  @@unique([store_code, variant_code, deleted_at], map: "store_product_variant_bonus_percentages_store_code_variant_code")
 }
 
 model store_service_translations {
@@ -1381,4 +1395,70 @@ model user_addresses {
   orders      orders[]
   users       users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "user_addresses_user_id_foreign")
   zones       zones?    @relation(fields: [zone_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_addresses_zone_id_foreign")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model coupon_restrictions {
+  id                BigInt    @id @default(autoincrement())
+  coupon_id         BigInt
+  restrictable_type String?   @db.VarChar(255)
+  restrictable_id   BigInt?
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+  status            String    @default("active") @db.VarChar(255)
+  coupons           coupons   @relation(fields: [coupon_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "coupon_restrictions_coupon_id_foreign")
+
+  @@index([restrictable_type, restrictable_id], map: "coupon_restrictions_restrictable_type_restrictable_id_index")
+}
+
+model coupon_usages {
+  id             BigInt    @id @default(autoincrement())
+  coupon_id      BigInt
+  user_id        BigInt
+  times_used     Int       @default(0)
+  last_used_date DateTime? @db.Date
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+  coupons        coupons   @relation(fields: [coupon_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "coupon_usages_coupon_id_foreign")
+  users          users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "coupon_usages_user_id_foreign")
+}
+
+model slider_images {
+  id             BigInt          @id @default(autoincrement())
+  slider_id      BigInt
+  title          String?         @db.VarChar(255)
+  short_text     String?         @db.VarChar(1000)
+  category_id    BigInt?
+  store_id       BigInt?
+  product_id     BigInt?
+  custom_url     String?         @db.VarChar(255)
+  created_at     DateTime?       @db.Timestamp(0)
+  updated_at     DateTime?       @db.Timestamp(0)
+  deleted_at     DateTime?       @db.Timestamp(0)
+  categories     categories?     @relation(fields: [category_id], references: [id], onDelete: Cascade, map: "slider_images_category_id_foreign")
+  store_products store_products? @relation(fields: [product_id], references: [id], onDelete: Cascade, map: "slider_images_product_id_foreign")
+  sliders        sliders         @relation(fields: [slider_id], references: [id], onDelete: Cascade, map: "slider_images_slider_id_foreign")
+  stores         stores?         @relation(fields: [store_id], references: [id], onDelete: Cascade, map: "slider_images_store_id_foreign")
+}
+
+model slider_sections {
+  id         BigInt    @id @default(autoincrement())
+  title      String?   @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  deleted_at DateTime? @db.Timestamp(0)
+  sliders    sliders[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model sliders {
+  id              BigInt          @id @default(autoincrement())
+  name            String          @db.VarChar(255)
+  status          String          @default("active") @db.VarChar(255)
+  section_id      BigInt
+  created_at      DateTime?       @db.Timestamp(0)
+  updated_at      DateTime?       @db.Timestamp(0)
+  deleted_at      DateTime?       @db.Timestamp(0)
+  slider_images   slider_images[]
+  slider_sections slider_sections @relation(fields: [section_id], references: [id], onDelete: Cascade, map: "sliders_section_id_foreign")
 }

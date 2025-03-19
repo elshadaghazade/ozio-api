@@ -67,7 +67,8 @@ const storeSelect = (params: {
         have_vegan: true,
         has_packet: true,
         open_time: true,
-        close_time: true,
+        close_time: true,   
+        preparation_time: true,
         currencies: {
             select: {
                 id: true,
@@ -78,6 +79,38 @@ const storeSelect = (params: {
             select: {
                 id: true,
                 name: true,
+            }
+        },
+        store_product_variant_assignments: {
+            select: {
+                store_product_variants: {
+                    select: {
+                        store_products: {
+                            select: {
+                                store_products_categories: {
+                                    select: {
+                                        categories: {
+                                            select: {
+                                                id: true,
+                                                category_translations: {
+                                                    select: {
+                                                        name: true,
+                                                    },
+                                                    where: {
+                                                        locale: {
+                                                            equals: params.locale,
+                                                            mode: 'insensitive'
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         zones: {
@@ -191,6 +224,26 @@ const storeSelect = (params: {
                                 id: true,
                                 tax_value: true,
                                 tax_type: true,
+                                store_products_categories: {
+                                    select: {
+                                        categories: {
+                                            select: {
+                                                id: true,
+                                                category_translations: {
+                                                    select: {
+                                                        name: true,
+                                                    },
+                                                    where: {
+                                                        locale: {
+                                                            equals: params.locale,
+                                                            mode: 'insensitive'
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             },
                         },
                         store_product_variant_translations: {
@@ -363,5 +416,79 @@ export const getStore = async (params: GetStoreParamsType) => {
 
     } catch {
         throw new NotFoundException('store');
+    }
+}
+
+export const getStoreProducts = async (params: {
+    store_id: number;
+    locale: string
+}) => {
+    try {
+        await prisma.store_product_variant_assignments.findMany({
+            where: {
+                store_id: params.store_id,
+                visibility: 'visible',
+                store_product_variants: {
+                    status: 'active',
+                    deleted_at: null
+                }
+            },
+            select: {
+                id: true,
+                stock: true,
+                price: true,
+                mrp: true,
+                min_order_quantity: true,
+                max_order_quantity: true,
+                store_product_variants: {
+                    select: {
+                        id: true,
+                        material_code: true,
+                        order_count: true,
+                        rating: true,
+                        is_recommended: true,
+                        is_organic: true,
+                        is_halal: true,
+                        is_popular_item: true,
+                        is_vegan: true,
+                        width: true,
+                        height: true,
+                        length: true,
+                        weight: true,
+                        volume: true,
+                        units: {
+                            select: {
+                                id: true,
+                                symbol: true,
+                                conversion: true,
+                                unit_types: {
+                                    select: {
+                                        id: true,
+                                        unit_type_translations: {
+                                            select: {
+                                                name: true,
+                                            },
+                                            where: {
+                                                locale: {
+                                                    equals: params?.locale,
+                                                    mode: 'insensitive'
+                                                }
+                                            }
+                                        }
+                                    },
+                                }
+                            },
+                        },
+                        colors: {
+                            select: {
+                                hex_code: true,
+                            }
+                        },
+                    },
+                }
+            }
+        })
+    } catch {
+        throw new NotFoundException('store products');
     }
 }

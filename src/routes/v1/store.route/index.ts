@@ -136,6 +136,9 @@ const router = express.Router();
  *                             type: string
  *                             format: date-time
  *                             example: "1970-01-01T04:18:24.000Z"
+ *                           preparation_time:
+ *                              type: integer
+ *                              example: 30
  *                           close_time:
  *                             type: string
  *                             format: date-time
