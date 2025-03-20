@@ -1,4 +1,5 @@
 import { getStoreController, searchStoreController } from '@/controllers/v1/store.controller/search.controller';
+import { jwtAuthMiddlewareNoException } from '@/middleware/authHandler';
 import express from 'express';
 
 const router = express.Router();
@@ -249,22 +250,25 @@ router.get('/search', searchStoreController);
  * /api/v1/stores/{store_id}:
  *   get:
  *     summary: Get store details
- *     description: Retrieves details of a specific store along with its category translation.
+ *     description: Retrieves detailed information about a specific store, including its category, bonus percentages, detailed divisions, holidays, and favorite status for the user.
  *     tags: [Stores & Products]
+ *     security:
+ *       - {}  # Allows anonymous access
+ *       - BearerAuth: []  # Allows authenticated access if token is provided
  *     parameters:
  *       - in: path
  *         name: store_id
  *         required: true
  *         schema:
  *           type: integer
- *         description: The ID of the store to retrieve.
+ *         description: The unique identifier of the store.
  *       - in: query
  *         name: locale
  *         required: false
  *         schema:
  *           type: string
  *           default: "en"
- *         description: The locale for product translation (e.g., "en", "fr", "es").
+ *         description: The locale for store category translations (e.g., "en", "fr", "es").
  *     responses:
  *       200:
  *         description: Successfully retrieved store details
@@ -294,13 +298,35 @@ router.get('/search', searchStoreController);
  *                         name:
  *                           type: string
  *                           example: "SuperMart"
+ *                         store_code:
+ *                           type: string
+ *                           example: "SM123"
+ *                         phone:
+ *                           type: string
+ *                           example: "+123456789"
+ *                         email:
+ *                           type: string
+ *                           example: "info@supermart.com"
+ *                         lat:
+ *                           type: string
+ *                           example: "40.7128"
+ *                         lng:
+ *                           type: string
+ *                           example: "-74.0060"
+ *                         rating:
+ *                           type: number
+ *                           format: float
+ *                           example: 4.8
  *                         status:
  *                           type: string
  *                           example: "active"
- *                         store_category_id:
- *                           type: integer
- *                           example: 5
- *                     categories:
+ *                         open_time:
+ *                           type: string
+ *                           example: "08:00:00"
+ *                         close_time:
+ *                           type: string
+ *                           example: "22:00:00"
+ *                     category:
  *                       type: object
  *                       properties:
  *                         name:
@@ -309,6 +335,78 @@ router.get('/search', searchStoreController);
  *                         locale:
  *                           type: string
  *                           example: "en"
+ *                     storeBonusPercentage:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 5
+ *                           percentage:
+ *                             type: number
+ *                             example: 10.5
+ *                           start_date:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2025-03-18T00:00:00Z"
+ *                     storeDetailDivisionsAndContent:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 12
+ *                           store_detail_divisions:
+ *                             type: object
+ *                             properties:
+ *                               display_name:
+ *                                 type: string
+ *                                 example: "Featured Items"
+ *                               type:
+ *                                 type: string
+ *                                 example: "promotions"
+ *                           store_detail_contents:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: integer
+ *                                 example: 45
+ *                               display_name:
+ *                                 type: string
+ *                                 example: "Best Sellers"
+ *                               type:
+ *                                 type: string
+ *                                 example: "list"
+ *                     storeHolidays:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 7
+ *                           name:
+ *                             type: string
+ *                             example: "Christmas Holiday"
+ *                           start_date:
+ *                             type: string
+ *                             format: date
+ *                             example: "2025-12-24"
+ *                           end_date:
+ *                             type: string
+ *                             format: date
+ *                             example: "2025-12-25"
+ *                           close_time:
+ *                             type: string
+ *                             example: "20:00:00"
+ *                           open_time:
+ *                             type: string
+ *                             example: "10:00:00"
+ *                     is_user_favorite_store:
+ *                       type: boolean
+ *                       example: true
  *       400:
  *         description: Invalid input or missing parameters
  *         content:
@@ -328,6 +426,6 @@ router.get('/search', searchStoreController);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/:store_id', getStoreController);
+router.get('/:store_id', jwtAuthMiddlewareNoException, getStoreController);
 
 export default router;

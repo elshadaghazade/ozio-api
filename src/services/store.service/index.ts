@@ -47,6 +47,7 @@ export interface SearchStoresParamsType {
 interface GetStoreParamsType {
     store_id: number;
     locale: string;
+    user_id?: number;
 }
 
 interface SelectFuncParamsType {
@@ -435,13 +436,44 @@ export const getStore = async (params: GetStoreParamsType) => {
                     }
                 }
             ]
-        })
+        });
+
+        const storeHolidays = await prisma.stores_store_holidays.findMany({
+            where: {
+                store_id: params.store_id,
+                store_holidays: {
+                    deleted_at: null
+                }
+            },
+            select: {
+                store_holidays: {
+                    select: {
+                        id: true,
+                        name: true,
+                        start_date: true,
+                        end_date: true,
+                        close_time: true,
+                        open_time: true,
+                        assign_all_stores: true,
+                    }
+                }
+            }
+        });
+
+        const is_user_favorite_store = !params.user_id ? false : await prisma.user_favorite_stores.count({
+            where: {
+                user_id: params.user_id,
+                store_id: store.id
+            }
+        }) > 0;
 
         return {
             store,
             category: storeCategoryTranslation,
             storeBonusPercentage,
-            storeDetailDivisionsAndContent
+            storeDetailDivisionsAndContent,
+            storeHolidays,
+            is_user_favorite_store
         }
 
     } catch {

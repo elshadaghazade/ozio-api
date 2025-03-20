@@ -1,4 +1,5 @@
 import { getStore, searchStores, SearchStoresParamsType } from "@/services/store.service";
+import { RequestWithUser } from "@/types/Http";
 import { ApiResponse } from "@/utils/apiResponse";
 import { Request, Response, NextFunction } from "express";
 
@@ -32,7 +33,7 @@ export const searchStoreController = async (req: Request, res: Response, next: N
     }
 }
 
-export const getStoreController = async (req: Request, res: Response, next: NextFunction) => {
+export const getStoreController = async (req: RequestWithUser, res: Response, next: NextFunction) => {
     try {
         const store_id = req.params.store_id;
 
@@ -42,7 +43,8 @@ export const getStoreController = async (req: Request, res: Response, next: Next
 
         const store = await getStore({
             store_id: Number(store_id),
-            locale: locale?.toString() || 'en'
+            locale: locale?.toString() || 'en',
+            user_id: req.user?.id
         });
 
         res.json(ApiResponse.success(store));
