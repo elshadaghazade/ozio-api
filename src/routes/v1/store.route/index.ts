@@ -1,4 +1,4 @@
-import { getStoreController, searchStoreController } from '@/controllers/v1/store.controller/search.controller';
+import { getStoreController, getStoreProductsController, searchStoreController } from '@/controllers/v1/store.controller/search.controller';
 import { jwtAuthMiddlewareNoException } from '@/middleware/authHandler';
 import express from 'express';
 
@@ -427,5 +427,197 @@ router.get('/search', searchStoreController);
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get('/:store_id', jwtAuthMiddlewareNoException, getStoreController);
+
+/**
+ * @swagger
+ * /api/v1/stores/{store_id}/products:
+ *   get:
+ *     summary: Get available products in a store
+ *     description: Retrieves a list of available products in a specific store, including product details, pricing, stock, categories, translations, and whether the product is a favorite for the user. Filters are optional.
+ *     tags: [Stores & Products]
+ *     security:
+ *       - {}  # Allows anonymous access
+ *       - BearerAuth: []  # Allows authenticated access if a token is provided
+ *     parameters:
+ *       - in: path
+ *         name: store_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The unique identifier of the store.
+ *       - in: query
+ *         name: locale
+ *         required: false
+ *         schema:
+ *           type: string
+ *           default: "en"
+ *         description: The locale for product translations (e.g., "en", "fr", "es").
+ *       - in: query
+ *         name: is_recommended
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: ["1", "0"]
+ *         description: Filter products that are recommended (`"1"` for true, `"0"` for false).
+ *       - in: query
+ *         name: is_organic
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: ["1", "0"]
+ *         description: Filter products that are organic (`"1"` for true, `"0"` for false).
+ *       - in: query
+ *         name: is_halal
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: ["1", "0"]
+ *         description: Filter products that are halal (`"1"` for true, `"0"` for false).
+ *       - in: query
+ *         name: is_vegan
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: ["1", "0"]
+ *         description: Filter products that are vegan (`"1"` for true, `"0"` for false).
+ *       - in: query
+ *         name: is_popular_item
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: ["1", "0"]
+ *         description: Filter products that are marked as popular (`"1"` for true, `"0"` for false).
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: The number of products to return per page.
+ *       - in: query
+ *         name: offset
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: The offset for pagination (starting point).
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved store products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "OK"
+ *                 statusCode:
+ *                   type: integer
+ *                   example: 200
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     products:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                             example: 2
+ *                           price:
+ *                             type: string
+ *                             example: "842.78"
+ *                           stock:
+ *                             type: string
+ *                             example: "11.56"
+ *                           mrp:
+ *                             type: string
+ *                             example: "378.03"
+ *                           min_order_quantity:
+ *                             type: integer
+ *                             nullable: true
+ *                             example: null
+ *                           max_order_quantity:
+ *                             type: integer
+ *                             nullable: true
+ *                             example: null
+ *                           store_product_variants:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: integer
+ *                                 example: 12
+ *                               material_code:
+ *                                 type: string
+ *                                 example: "942436"
+ *                               is_recommended:
+ *                                 type: boolean
+ *                                 example: false
+ *                               is_organic:
+ *                                 type: boolean
+ *                                 example: false
+ *                               is_halal:
+ *                                 type: boolean
+ *                                 example: false
+ *                               is_vegan:
+ *                                 type: boolean
+ *                                 example: true
+ *                               is_popular_item:
+ *                                 type: boolean
+ *                                 example: true
+ *                               width:
+ *                                 type: integer
+ *                                 example: 16
+ *                               height:
+ *                                 type: integer
+ *                                 example: 30
+ *                               length:
+ *                                 type: integer
+ *                                 example: 30
+ *                               weight:
+ *                                 type: integer
+ *                                 example: 21
+ *                               volume:
+ *                                 type: integer
+ *                                 example: 25
+ *                               store_product_variant_translations:
+ *                                 type: array
+ *                                 items:
+ *                                   type: object
+ *                                   properties:
+ *                                     name:
+ *                                       type: string
+ *                                       example: "numquam"
+ *                               is_favorite:
+ *                                 type: boolean
+ *                                 example: false
+ *                     total:
+ *                       type: integer
+ *                       example: 2
+ *       400:
+ *         description: Invalid input or missing parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: Store products not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+router.get('/:store_id/products', jwtAuthMiddlewareNoException, getStoreProductsController);
 
 export default router;

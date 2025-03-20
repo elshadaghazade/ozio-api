@@ -50,10 +50,24 @@ interface GetStoreParamsType {
     user_id?: number;
 }
 
+interface GetStoreProductsParamsType {
+    store_id: number;
+    locale: string;
+    user_id?: number;
+    limit?: number;
+    offset?: number;
+    is_recommended?: boolean;
+    is_organic?: boolean;
+    is_halal?: boolean;
+    is_vegan?: boolean;
+    is_popular_item?: boolean;
+}
+
 interface SelectFuncParamsType {
     product_limit?: number;
     locale: string;
     include_products?: boolean;
+    user_id?: number;
 }
 
 const storeProductVariantAssignmentSelect = (params: SelectFuncParamsType) => {
@@ -79,6 +93,15 @@ const storeProductVariantAssignmentSelect = (params: SelectFuncParamsType) => {
                     length: true,
                     weight: true,
                     volume: true,
+                    _count: {
+                        select: {
+                            user_favorite_store_product_variants: {
+                                where: {
+                                    user_id: params.user_id || -1
+                                }
+                            }
+                        }
+                    },
                     store_product_variant_uploads: {
                         select: {
                             id: true,
@@ -481,75 +504,92 @@ export const getStore = async (params: GetStoreParamsType) => {
     }
 }
 
-export const getStoreProducts = async (params: {
-    store_id: number;
-    locale: string
-}) => {
+export const getStoreProducts = async (params: GetStoreProductsParamsType) => {
     try {
-        await prisma.store_product_variant_assignments.findMany({
-            where: {
-                store_id: params.store_id,
-                visibility: 'visible',
-                store_product_variants: {
-                    status: 'active',
-                    deleted_at: null
-                }
+        const productvariantsSelect = storeProductVariantAssignmentSelect({
+            locale: params.locale,
+            user_id: params.user_id
+        });
+
+        const where: Prisma.store_product_variant_assignmentsWhereInput = {
+            store_id: params.store_id,
+            visibility: 'visible',
+            stock: {
+                gt: 0
             },
-            select: {
-                id: true,
-                stock: true,
-                price: true,
-                mrp: true,
-                min_order_quantity: true,
-                max_order_quantity: true,
-                store_product_variants: {
-                    select: {
-                        id: true,
-                        material_code: true,
-                        order_count: true,
-                        rating: true,
-                        is_recommended: true,
-                        is_organic: true,
-                        is_halal: true,
-                        is_popular_item: true,
-                        is_vegan: true,
-                        width: true,
-                        height: true,
-                        length: true,
-                        weight: true,
-                        volume: true,
-                        units: {
-                            select: {
-                                id: true,
-                                symbol: true,
-                                conversion: true,
-                                unit_types: {
-                                    select: {
-                                        id: true,
-                                        unit_type_translations: {
-                                            select: {
-                                                name: true,
-                                            },
-                                            where: {
-                                                locale: {
-                                                    equals: params?.locale,
-                                                    mode: 'insensitive'
-                                                }
-                                            }
-                                        }
-                                    },
-                                }
-                            },
-                        },
-                        colors: {
-                            select: {
-                                hex_code: true,
-                            }
-                        },
-                    },
-                }
+            store_product_variants: {
+                status: 'active',
+                deleted_at: null
             }
-        })
+        }
+
+        if (params.is_recommended === true && where.store_product_variants) {
+            where.store_product_variants.is_recommended = params.is_recommended;
+        } else if(params.is_recommended === true) {
+            where.store_product_variants = {
+                is_recommended: params.is_recommended
+            }
+        }
+
+        if (params.is_halal === true && where.store_product_variants) {
+            where.store_product_variants.is_halal = params.is_halal;
+        } else if(params.is_halal === true) {
+            where.store_product_variants = {
+                is_halal: params.is_halal
+            }
+        }
+
+        if (params.is_organic === true && where.store_product_variants) {
+            where.store_product_variants.is_organic = params.is_organic;
+        } else if(params.is_organic === true) {
+            where.store_product_variants = {
+                is_organic: params.is_organic
+            }
+        }
+
+        if (params.is_popular_item === true && where.store_product_variants) {
+            where.store_product_variants.is_popular_item = params.is_popular_item;
+        } else if(params.is_popular_item === true) {
+            where.store_product_variants = {
+                is_popular_item: params.is_popular_item
+            }
+        }
+
+        if (params.is_vegan === true && where.store_product_variants) {
+            where.store_product_variants.is_vegan = params.is_vegan;
+        } else if(params.is_vegan === true) {
+            where.store_product_variants = {
+                is_vegan: params.is_vegan
+            }
+        }
+
+        const {
+            limit=50,
+            offset=0
+        } = params;
+
+        const products = await prisma.store_product_variant_assignments.findMany({
+            where,
+            select: productvariantsSelect.select,
+            skip: isNaN(offset) ? 0 : offset,
+            take: isNaN(limit) || limit > 50 || limit < 0 ? 50 : limit
+        });
+
+        const total = await prisma.store_product_variant_assignments.count({
+            where
+        });
+
+        return {
+            products: products.map((product: any) => {
+                const is_favorite = typeof product.store_product_variants?._count?.user_favorite_store_product_variants === 'number' && product.store_product_variants._count.user_favorite_store_product_variants > 0;
+
+                delete product.store_product_variants._count;
+                product.store_product_variants.is_favorite = is_favorite;
+
+                return product;
+            }),
+            total
+        };
     } catch {
         throw new NotFoundException('store products');
     }

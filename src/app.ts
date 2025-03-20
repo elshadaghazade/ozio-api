@@ -2,7 +2,8 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
-import routes from "@/routes/v1";
+import routesV1 from "@/routes/v1";
+import { routeCacheMiddleware } from "@/middleware/routeCacheHandler";
 import logger from "@/config/logger";
 import { setupSwagger } from "@/config/swagger";
 
@@ -14,7 +15,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("combined", { stream: { write: (message) => logger.info(message.trim()) } }));
 
-app.use("/api/v1", routes);
+
+app.use("/api/v1", routeCacheMiddleware({ prefix: 'routecachemiddleware', ttl: 30, methods: 'GET' }), routesV1);
 
 
 app.get("/", (_, res) => {
