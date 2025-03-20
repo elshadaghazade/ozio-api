@@ -3,7 +3,6 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import routesV1 from "@/routes/v1";
-import { routeCacheMiddleware } from "@/middleware/routeCacheHandler";
 import logger from "@/config/logger";
 import { setupSwagger } from "@/config/swagger";
 
