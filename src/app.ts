@@ -16,7 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan("combined", { stream: { write: (message) => logger.info(message.trim()) } }));
 
 
-app.use("/api/v1", routeCacheMiddleware({ prefix: 'routecachemiddleware', ttl: 30, methods: 'GET' }), routesV1);
+app.use("/api/v1", routesV1);
 
 
 app.get("/", (_, res) => {

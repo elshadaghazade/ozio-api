@@ -7,6 +7,8 @@ import express from 'express';
 
 const router = express.Router();
 
+const globalRateLimitInstance = getGlobalRateLimit();
+
 /**
  * @swagger
  * /api/v1/auth/login:
@@ -79,7 +81,7 @@ router.post('/login',
  *       500:
  *         description: Internal server error
  */
-router.post('/otp_verify', otpController);
+router.post('/otp_verify', globalRateLimitInstance, otpController);
 
 /**
  * @swagger
@@ -147,7 +149,7 @@ router.post('/otp_verify', otpController);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.put('/complete_registration', jwtAuthMiddleware, registrationComplete);
+router.put('/complete_registration', globalRateLimitInstance, jwtAuthMiddleware, registrationComplete);
 
 /**
  * @swagger
@@ -214,6 +216,6 @@ router.put('/complete_registration', jwtAuthMiddleware, registrationComplete);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/refresh', refreshTokenController);
+router.post('/refresh', globalRateLimitInstance, refreshTokenController);
 
 export default router;

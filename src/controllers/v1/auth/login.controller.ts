@@ -26,7 +26,7 @@ export const loginController = async (req: Request<{}, null, Partial<Prisma.user
     }
 }
 
-export const otpController = async (req: Request<null, null, { otp?: string | number, phone?: string }>, res: Response, next: NextFunction) => {
+export const otpController = async (req: Request, res: Response, next: NextFunction) => {
     try {
 
         const { user_id } = await otpVerify(req.body);

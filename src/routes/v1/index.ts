@@ -7,14 +7,19 @@ import profileRoutes from '@/routes/v1/profile.route';
 import categoryRoutes from '@/routes/v1/category.route';
 import storeRoutes from '@/routes/v1/store.route';
 import locationRoutes from '@/routes/v1/location.route';
+import { routeCacheMiddleware } from '@/middleware/routeCacheHandler';
 
 const routes = express.Router();
 
-routes.use('/banners', getGlobalRateLimit(), bannerRoutes);
+const routeCacheMiddlewareInstance = routeCacheMiddleware({ prefix: 'routecachemiddleware', ttl: 30, methods: 'GET' });
+const globalRateLimitInstance = getGlobalRateLimit();
+
+routes.use('/banners', globalRateLimitInstance, routeCacheMiddlewareInstance, bannerRoutes);
 routes.use('/auth', authRoutes);
-routes.use('/profile', getGlobalRateLimit(), profileRoutes);
-routes.use('/categories', getGlobalRateLimit(), categoryRoutes);
-routes.use('/stores', getGlobalRateLimit(), storeRoutes);
-routes.use('/location', getGlobalRateLimit(), locationRoutes);
+routes.use('/profile', globalRateLimitInstance, routeCacheMiddlewareInstance, profileRoutes);
+routes.use('/categories', globalRateLimitInstance, routeCacheMiddlewareInstance, categoryRoutes);
+routes.use('/stores', globalRateLimitInstance, routeCacheMiddlewareInstance, storeRoutes);
+routes.use('/location', globalRateLimitInstance, routeCacheMiddlewareInstance, locationRoutes);
+
 
 export default routes;
